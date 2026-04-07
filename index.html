@@ -331,13 +331,17 @@ canvas {
 .tab-pane.active { display: -webkit-flex; display: flex; }
 /* ── Upgrade card ── */
 .upg-card {
-  background: #1e2a3a;
-  border: 1px solid #2e4a6a;
-  border-radius: 8px;
-  width: 64px;
-  height: 64px;
-  display: -webkit-flex;
-  display: flex;
+  background: #1e2a3a !important;
+  border: 1px solid #2e4a6a !important;
+  border-radius: 8px !important;
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+  box-sizing: border-box !important;
+  padding: 4px !important;
+  display: -webkit-flex !important;
+  display: flex !important;
   -webkit-flex-direction: column;
   flex-direction: column;
   -webkit-align-items: center;
@@ -348,20 +352,18 @@ canvas {
   cursor: pointer;
   -webkit-appearance: none;
   font-family: inherit;
+  font-size: 9px !important;
   color: #f0f9ff;
   -webkit-flex-shrink: 0;
   flex-shrink: 0;
-  position: relative;
   -webkit-tap-highlight-color: transparent;
-  padding: 4px 2px;
 }
 .upg-card:active { filter: brightness(1.25); }
-.upg-card.no-gold { background: #1a1a1a; border-color: #555; opacity: 0.5; }
-.upg-card.locked  { background: #111; border-color: #2a2a2a; pointer-events: none; }
-.card-icon { font-size: 18px; line-height: 1; }
-.card-name { font-size: 9px; font-weight: 600; color: #94a3b8; text-align: center; line-height: 1.1; }
-.card-stat { font-size: 10px; font-weight: 700; color: #f0f9ff; }
-.card-cost { font-size: 9px; color: #f59e0b; }
+.upg-card.no-gold { background: #1a1a1a !important; border-color: #555 !important; opacity: 0.5; }
+.card-icon { font-size: 16px !important; line-height: 1; }
+.card-name { font-size: 9px !important; font-weight: 600; color: #94a3b8; text-align: center; line-height: 1.1; }
+.card-stat { font-size: 10px !important; font-weight: 700 !important; color: #f0f9ff; }
+.card-cost { font-size: 9px !important; color: #f59e0b; }
 .card-tag  { display: none; }
 /* ── Card glow animation (post-unlock) ── */
 @-webkit-keyframes cardGlow {
@@ -1319,25 +1321,19 @@ function buildCards() {
     pane.innerHTML = '';
     for (const upg of UPGRADES) {
       if (upg.tab !== tabKey) continue;
-      const locked = !isUnlocked(upg.unlock);
+      if (!isUnlocked(upg.unlock)) continue; // 잠긴 항목은 표시 안 함
       const btn = document.createElement('button');
       btn.id        = 'upg-card-' + upg.key;
-      btn.className = 'upg-card' + (locked ? ' locked' : '');
-      if (locked) {
-        btn.innerHTML = '<span style="font-size:20px;opacity:0.4">🔒</span>';
-      } else {
-        const statText = G ? upg.stat() : '-';
-        btn.innerHTML =
-          '<span class="card-icon">'  + upg.icon + '</span>' +
-          '<span class="card-name">'  + upg.name + '</span>' +
-          '<span class="card-stat" id="cs-' + upg.key + '">' + statText + '</span>' +
-          '<span class="card-cost">'  + upg.cost + '🪙</span>';
-      }
-      if (!locked) {
-        btn.addEventListener('touchstart', function(ev) { ev.preventDefault(); }, { passive: false });
-        btn.addEventListener('touchend',   function(ev) { ev.preventDefault(); doUpgrade(upg.key); }, { passive: false });
-        btn.addEventListener('click', function() { doUpgrade(upg.key); });
-      }
+      btn.className = 'upg-card';
+      const statText = G ? upg.stat() : '-';
+      btn.innerHTML =
+        '<span class="card-icon">'  + upg.icon + '</span>' +
+        '<span class="card-name">'  + upg.name + '</span>' +
+        '<span class="card-stat" id="cs-' + upg.key + '">' + statText + '</span>' +
+        '<span class="card-cost">'  + upg.cost + '🪙</span>';
+      btn.addEventListener('touchstart', function(ev) { ev.preventDefault(); }, { passive: false });
+      btn.addEventListener('touchend',   function(ev) { ev.preventDefault(); doUpgrade(upg.key); }, { passive: false });
+      btn.addEventListener('click', function() { doUpgrade(upg.key); });
       pane.appendChild(btn);
     }
   }
