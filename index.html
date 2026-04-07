@@ -286,7 +286,8 @@ canvas {
 #screen-shop {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  background: var(--bg-panel);
+  background: #030b10;
+  border-top: 1px solid rgba(0,255,255,0.20);
   z-index: 5;
   pointer-events: auto;
   display: -webkit-flex;
@@ -294,45 +295,50 @@ canvas {
   -webkit-flex-direction: column;
   flex-direction: column;
 }
-/* ── Tab bar (row 1) ── */
+/* ── Tab bar ── */
 #tab-bar {
   display: -webkit-flex;
   display: flex;
-  height: 32px;
-  background: var(--bg-panel);
-  border-bottom: 1px solid var(--border);
+  height: 30px;
+  background: #030b10;
+  border-bottom: 1px solid #0a2233;
   -webkit-align-items: center;
   align-items: center;
 }
 .tab-btn {
   -webkit-flex: 1;
   flex: 1;
-  background: transparent;
+  background: #030b10;
   border: none;
-  color: var(--text-secondary);
-  font-size: 11px;
+  border-right: 1px solid #0a2233;
+  border-bottom: 1px solid transparent;
+  color: #334455;
+  font-size: 10px;
   font-weight: 700;
-  height: 32px;
+  height: 30px;
   padding: 0 4px;
   cursor: pointer;
   -webkit-appearance: none;
-  font-family: inherit;
-  border-bottom: 2px solid transparent;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   -webkit-transition: color 0.12s, border-color 0.12s;
   transition: color 0.12s, border-color 0.12s;
 }
+.tab-btn:last-of-type { border-right: none; }
 .tab-btn.active {
-  color: var(--text-primary);
-  border-bottom-color: var(--accent-blue);
-  background: transparent;
+  color: #00ffff;
+  border-bottom-color: #00ffff;
+  background: #030b10;
 }
-/* ── Card row (row 2) ── */
+/* ── Card row ── */
 #tab-content {
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   padding: 6px 6px 8px;
   scrollbar-width: none;
+  background: #030b10;
 }
 #tab-content::-webkit-scrollbar { display: none; }
 .tab-pane { display: none; }
@@ -343,65 +349,137 @@ canvas {
   flex-direction: row;
   -webkit-flex-wrap: nowrap;
   flex-wrap: nowrap;
-  gap: 8px;
+  gap: 6px;
   width: -webkit-max-content;
   width: max-content;
-  min-height: 68px;
+  min-height: 78px;
 }
-/* ── Upgrade card ── */
+
+/* ── Upgrade card — corner-bracket style ── */
 .upg-card {
-  background: var(--bg-card) !important;
-  border: 1px solid var(--border) !important;
-  border-radius: 8px !important;
-  width: 60px !important;
-  height: 60px !important;
-  min-width: 60px !important;
-  max-width: 60px !important;
+  /* size */
+  width: 72px !important;
+  height: 72px !important;
+  min-width: 72px !important;
+  max-width: 72px !important;
   box-sizing: border-box !important;
-  padding: 4px !important;
+  padding: 4px 5px !important;
+  /* appearance */
+  --cc: rgba(0,255,255,0.60);   /* corner color variable */
+  background-color: #030b10 !important;
+  background-image:
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)) !important;
+  background-size:
+    8px 1px, 1px 8px,
+    8px 1px, 1px 8px,
+    8px 1px, 1px 8px,
+    8px 1px, 1px 8px !important;
+  background-position:
+    0 0,   0 0,
+    100% 0,   100% 0,
+    0 100%,   0 100%,
+    100% 100%,  100% 100% !important;
+  background-repeat: no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  /* layout */
   display: -webkit-flex !important;
   display: flex !important;
   -webkit-flex-direction: column;
   flex-direction: column;
   -webkit-align-items: center;
   align-items: center;
-  -webkit-justify-content: center;
-  justify-content: center;
-  gap: 1px;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
   cursor: pointer;
   -webkit-appearance: none;
-  font-family: inherit;
-  font-size: 9px !important;
-  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
   -webkit-flex-shrink: 0;
   flex-shrink: 0;
   -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
-.upg-card:active { filter: brightness(1.3); }
-.upg-card.no-gold { opacity: 0.4 !important; border-color: var(--accent-red) !important; }
-.card-icon { font-size: 16px !important; line-height: 1; }
-.card-name { font-size: 9px !important; font-weight: 600; color: var(--text-secondary); text-align: center; line-height: 1.1; }
-.card-stat { font-size: 11px !important; font-weight: 700 !important; color: var(--text-primary); }
-.card-cost { font-size: 9px !important; color: var(--accent-yellow); }
-.card-tag  { display: none; }
+.upg-card:active {
+  --cc: rgba(0,255,255,1);
+  background-color: #001a22 !important;
+}
+.upg-card.no-gold {
+  --cc: rgba(239,68,68,1);
+  opacity: 1 !important;
+}
+
+/* 아이콘 숨김 */
+.card-icon { display: none !important; }
+.card-tag  { display: none !important; }
+
+/* 이름 */
+.card-name {
+  font-size: 9px !important;
+  font-weight: 400;
+  color: #0099bb;
+  text-align: center;
+  line-height: 1.1;
+  width: 100%;
+  border-bottom: 1px solid #0a2233;
+  padding-bottom: 3px;
+  font-family: 'Courier New', monospace;
+}
+/* 수치 */
+.card-stat {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #00ffff;
+  text-align: center;
+  line-height: 1;
+  -webkit-flex: 1;
+  flex: 1;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  width: 100%;
+  border-bottom: 1px solid #0a2233;
+  font-family: 'Courier New', monospace;
+}
+/* 비용 */
+.card-cost {
+  font-size: 9px !important;
+  color: #f59e0b;
+  text-align: center;
+  width: 100%;
+  line-height: 1;
+  font-family: 'Courier New', monospace;
+}
+.upg-card.no-gold .card-cost { color: #ef4444; }
+
+/* 호환 클래스 */
 .upgrade-btn {
-  width: 60px !important;
-  height: 60px !important;
+  width: 72px !important;
+  height: 72px !important;
   font-size: 9px !important;
 }
-/* ── Card glow animation (post-unlock) ── */
+
+/* ── 해금 후 글로우 애니메이션 ── */
 @-webkit-keyframes cardGlow {
-  0%,100% { box-shadow: 0 0 0 rgba(168,85,247,0); }
-  50%      { box-shadow: 0 0 14px rgba(168,85,247,0.9), 0 0 28px rgba(124,58,237,0.6); }
+  0%,100% { --cc: rgba(0,255,255,0.6); }
+  50%      { --cc: rgba(204,68,255,1); box-shadow: 0 0 12px rgba(204,68,255,0.7); }
 }
 @keyframes cardGlow {
-  0%,100% { box-shadow: 0 0 0 rgba(168,85,247,0); }
-  50%      { box-shadow: 0 0 14px rgba(168,85,247,0.9), 0 0 28px rgba(124,58,237,0.6); }
+  0%,100% { --cc: rgba(0,255,255,0.6); }
+  50%      { --cc: rgba(204,68,255,1); box-shadow: 0 0 12px rgba(204,68,255,0.7); }
 }
 .card-highlight {
   -webkit-animation: cardGlow 0.5s ease-in-out 3;
   animation: cardGlow 0.5s ease-in-out 3;
-  border-color: #a855f7 !important;
 }
 
 /* ── Shop flash ── */
@@ -772,21 +850,37 @@ canvas {
 
 /* ── Speed button ── */
 #speed-btn {
-  background: var(--bg-card);
-  color: var(--accent-yellow);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 11px;
+  --cc: rgba(0,255,255,0.7);
+  background-color: #030b10;
+  background-image:
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc));
+  background-size:
+    6px 1px, 1px 6px, 6px 1px, 1px 6px,
+    6px 1px, 1px 6px, 6px 1px, 1px 6px;
+  background-position:
+    0 0, 0 0, 100% 0, 100% 0,
+    0 100%, 0 100%, 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  border: none;
+  border-radius: 0;
+  color: #00ffff;
+  font-size: 10px;
   font-weight: 700;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Courier New', monospace;
   flex-shrink: 0;
-  -webkit-appearance: none;
   -webkit-flex-shrink: 0;
+  -webkit-appearance: none;
 }
-#speed-btn:active { filter: brightness(1.3); }
+#speed-btn:active {
+  --cc: rgba(0,255,255,1);
+  background-color: #001a22;
+}
 
 /* ── Pause menu ── */
 #pause-screen {
@@ -1027,9 +1121,9 @@ canvas {
     <div id="screen-shop">
       <div id="tab-bar">
         <button id="speed-btn">1×</button>
-        <button class="tab-btn active" id="tab-atk">⚔️ 공격</button>
-        <button class="tab-btn"        id="tab-def">🛡️ 방어</button>
-        <button class="tab-btn"        id="tab-spc">💎 특수</button>
+        <button class="tab-btn active" id="tab-atk">/ ATTACK</button>
+        <button class="tab-btn"        id="tab-def">/ DEFENSE</button>
+        <button class="tab-btn"        id="tab-spc">/ SPECIAL</button>
       </div>
       <div id="tab-content">
         <div class="tab-pane active" id="pane-atk"></div>
