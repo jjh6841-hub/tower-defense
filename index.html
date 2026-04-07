@@ -320,15 +320,19 @@ canvas {
   scrollbar-width: none;
 }
 #tab-content::-webkit-scrollbar { display: none; }
-.tab-pane {
-  display: none;
+.tab-pane { display: none; }
+.tab-pane.active {
+  display: -webkit-flex;
+  display: flex;
   -webkit-flex-direction: row;
   flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
   gap: 8px;
   width: -webkit-max-content;
   width: max-content;
+  min-height: 68px;
 }
-.tab-pane.active { display: -webkit-flex; display: flex; }
 /* ── Upgrade card ── */
 .upg-card {
   background: #1e2a3a !important;
@@ -1067,14 +1071,15 @@ function onWaveComplete() {
 }
 
 function triggerGameOver() {
-  G.phase    = 'gameover';
-  PERM.gold  = G.gold;   // 남은 골드 보존
-  PERM.gems  = G.gems;
+  G.phase   = 'gameover';
+  PERM.gold = G.gold;
+  PERM.gems = G.gems;
   savePerm();
   document.getElementById('r-wave').textContent  = G.wave;
   document.getElementById('r-kills').textContent = G.killCount;
   document.getElementById('r-gold').textContent  = '💰 ' + G.goldEarned;
   document.getElementById('results-screen').classList.add('show');
+  setTimeout(openShop, 1500); // 1.5초 후 자동으로 상점 이동
 }
 
 /* ═══════════════════════════════════════════════════════════════
