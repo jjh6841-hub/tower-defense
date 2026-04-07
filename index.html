@@ -197,6 +197,58 @@ canvas {
 .si-btn:active { background: #1d4ed8; }
 .si-btn.disabled { opacity: 0.32; pointer-events: none; }
 
+/* ── Shop unlock section ── */
+#unlock-section {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 14px;
+}
+.unlock-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a78bfa;
+  letter-spacing: 1px;
+  padding: 2px 0 8px;
+}
+.unlock-item {
+  background: #1a1f35;
+  border: 1px solid #312e81;
+  border-radius: 10px;
+  padding: 9px 13px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.unlock-item.owned { opacity: 0.42; border-color: #1e293b; }
+.ui-info { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; gap: 2px; }
+.ui-name { font-size: 13px; font-weight: 700; color: #c4b5fd; }
+.ui-desc { font-size: 11px; color: #64748b; }
+.ui-btn {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 42px;
+  min-width: 58px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  font-family: inherit;
+  white-space: nowrap;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+}
+.ui-btn:active { background: #6d28d9; }
+.ui-btn.disabled  { opacity: 0.32; pointer-events: none; }
+.ui-btn.owned-btn { background: #1e293b; color: #4ade80; pointer-events: none; }
+
 /* ── Shared overlay button ── */
 .ov-btn {
   background: #16a34a;
@@ -221,45 +273,102 @@ canvas {
 #ui-panel {
   position: absolute;
   bottom: 0; left: 0; right: 0;
-  padding: 5px 8px 10px;
-  background: rgba(0,0,0,0.58);
-  display: -webkit-flex;
-  display: flex;
-  -webkit-justify-content: center;
-  justify-content: center;
-  gap: 6px;
+  background: rgba(0,0,0,0.75);
   z-index: 5;
   pointer-events: auto;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
 }
-.upg-btn {
+/* ── Tab bar (row 1) ── */
+#tab-bar {
+  display: -webkit-flex;
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.tab-btn {
   -webkit-flex: 1;
   flex: 1;
-  max-width: 78px;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  color: #f0f9ff;
-  font-size: 11px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 12px;
   font-weight: 700;
-  padding: 5px 2px;
-  min-height: 48px;
+  padding: 7px 4px 5px;
   cursor: pointer;
   -webkit-appearance: none;
   font-family: inherit;
+  border-bottom: 2px solid transparent;
+  -webkit-transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn.active { color: #f0f9ff; border-bottom-color: #3b82f6; }
+.tab-btn:active { filter: brightness(1.3); }
+/* ── Card row (row 2) ── */
+#tab-content {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 5px 6px 7px;
+  scrollbar-width: none;
+}
+#tab-content::-webkit-scrollbar { display: none; }
+.tab-pane {
+  display: none;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  gap: 5px;
+  width: -webkit-max-content;
+  width: max-content;
+}
+.tab-pane.active { display: -webkit-flex; display: flex; }
+/* ── Upgrade card ── */
+.upg-card {
+  background: #1e293b;
+  border: 1.5px solid #334155;
+  border-radius: 9px;
+  padding: 6px 6px 5px;
+  width: 64px;
   display: -webkit-flex;
   display: flex;
   -webkit-flex-direction: column;
   flex-direction: column;
   -webkit-align-items: center;
   align-items: center;
-  -webkit-justify-content: center;
-  justify-content: center;
   gap: 2px;
-  line-height: 1.3;
+  cursor: pointer;
+  -webkit-appearance: none;
+  font-family: inherit;
+  color: #f0f9ff;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
-.upg-btn:active { filter: brightness(1.35); }
-.upg-btn.disabled { opacity: 0.26; pointer-events: none; }
-.upg-btn .tag { font-size: 9px; color: #64748b; font-weight: 400; }
+.upg-card:active { filter: brightness(1.3); }
+.upg-card.no-gold { border-color: #dc2626; }
+.upg-card.locked  { opacity: 0.35; pointer-events: none; }
+.card-icon { font-size: 15px; line-height: 1; }
+.card-name { font-size: 9px; font-weight: 700; color: #cbd5e1; text-align: center; line-height: 1.2; }
+.card-stat { font-size: 9px; color: #94a3b8; }
+.card-cost { font-size: 10px; font-weight: 700; color: #fbbf24; }
+.card-tag  { font-size: 8px; color: #475569; }
+.lock-badge { position: absolute; top: 3px; right: 4px; font-size: 9px; }
+/* ── Card glow animation (post-unlock) ── */
+@-webkit-keyframes cardGlow {
+  0%,100% { box-shadow: 0 0 0 rgba(168,85,247,0); }
+  50%      { box-shadow: 0 0 14px rgba(168,85,247,0.9), 0 0 28px rgba(124,58,237,0.6); }
+}
+@keyframes cardGlow {
+  0%,100% { box-shadow: 0 0 0 rgba(168,85,247,0); }
+  50%      { box-shadow: 0 0 14px rgba(168,85,247,0.9), 0 0 28px rgba(124,58,237,0.6); }
+}
+.card-highlight {
+  -webkit-animation: cardGlow 0.5s ease-in-out 3;
+  animation: cardGlow 0.5s ease-in-out 3;
+  border-color: #a855f7 !important;
+}
 
 /* ── Shop flash ── */
 #shop-flash {
@@ -303,10 +412,16 @@ canvas {
   <div id="canvas-area">
     <canvas id="gameCanvas"></canvas>
     <div id="ui-panel">
-      <button class="upg-btn" id="ub-dmg"><span>⚔ 공격력</span><span>5💰</span><span class="tag">임시</span></button>
-      <button class="upg-btn" id="ub-spd"><span>⚡ 공격속도</span><span>7💰</span><span class="tag">임시</span></button>
-      <button class="upg-btn" id="ub-rng"><span>🎯 범위</span><span>6💰</span><span class="tag">임시</span></button>
-      <button class="upg-btn" id="ub-heal"><span>❤️ 회복</span><span>8💰</span><span class="tag">임시</span></button>
+      <div id="tab-bar">
+        <button class="tab-btn active" id="tab-atk">⚔️ 공격</button>
+        <button class="tab-btn"        id="tab-def">🛡️ 방어</button>
+        <button class="tab-btn"        id="tab-spc">💎 특수</button>
+      </div>
+      <div id="tab-content">
+        <div class="tab-pane active" id="pane-atk"></div>
+        <div class="tab-pane"        id="pane-def"></div>
+        <div class="tab-pane"        id="pane-spc"></div>
+      </div>
     </div>
     <div id="wave-banner"></div>
   </div>
@@ -364,6 +479,7 @@ canvas {
       <button class="si-btn" id="sb-hp">8💰</button>
     </div>
   </div>
+  <div id="unlock-section"></div>
   <p id="shop-flash">✔ 영구 적용됨!</p>
   <button class="ov-btn blue" id="btn-start-game">게임 시작</button>
 </div>
@@ -383,12 +499,13 @@ let CW = 360, CH = 640; // logical canvas dimensions
 
 /* ── 영구 데이터 (게임 종료 후에도 유지) ── */
 let PERM = {
-  gold:  10,   // 시작 골드
-  gems:  0,
-  dmgLv: 0,
-  spdLv: 0,
-  rngLv: 0,
-  hpLv:  0,
+  gold:    10,  // 시작 골드
+  gems:    0,
+  dmgLv:   0,
+  spdLv:   0,
+  rngLv:   0,
+  hpLv:    0,
+  unlocks: {},  // { crit: true, multi: true, ... }
 };
 
 function loadPerm() {
@@ -396,12 +513,13 @@ function loadPerm() {
     const s = localStorage.getItem('td_perm');
     if (s) {
       const d = JSON.parse(s);
-      PERM.gold  = d.gold  ?? 10;
-      PERM.gems  = d.gems  ?? 0;
-      PERM.dmgLv = d.dmgLv ?? 0;
-      PERM.spdLv = d.spdLv ?? 0;
-      PERM.rngLv = d.rngLv ?? 0;
-      PERM.hpLv  = d.hpLv  ?? 0;
+      PERM.gold    = d.gold    ?? 10;
+      PERM.gems    = d.gems    ?? 0;
+      PERM.dmgLv   = d.dmgLv  ?? 0;
+      PERM.spdLv   = d.spdLv  ?? 0;
+      PERM.rngLv   = d.rngLv  ?? 0;
+      PERM.hpLv    = d.hpLv   ?? 0;
+      PERM.unlocks = (d.unlocks && typeof d.unlocks === 'object') ? d.unlocks : {};
     }
   } catch (_) {}
 }
@@ -436,6 +554,101 @@ const SHOP_ITEMS = {
     effect: () => (10 + PERM.hpLv * 2) + ' → ' + (10 + (PERM.hpLv + 1) * 2),
   },
 };
+
+/* ── 인게임 업그레이드 정의 (임시) ── */
+const UPGRADES = [
+  // ─ 공격 탭 ─
+  { key:'dmg',     tab:'atk', icon:'⚔️',  name:'공격력',   cost:5,  unlock:null,
+    stat()   { return '피해 '+G.tower.dmg; },
+    canBuy() { return G.gold>=5; },
+    apply()  { G.gold-=5; G.tower.dmg++; },
+  },
+  { key:'spd',     tab:'atk', icon:'⚡',  name:'공격속도',  cost:7,  unlock:null,
+    stat()   { return (G.tower.atkMs/1000).toFixed(2)+'s'; },
+    canBuy() { return G.gold>=7 && G.tower.atkMs>200; },
+    apply()  { G.gold-=7; G.tower.atkMs=Math.max(200,G.tower.atkMs-100); },
+  },
+  { key:'rng',     tab:'atk', icon:'🎯',  name:'범위',     cost:6,  unlock:null,
+    stat()   { return 'Lv.'+G.rangeLevel; },
+    canBuy() { return G.gold>=6; },
+    apply()  { G.gold-=6; G.tower.range+=30; G.rangeLevel++; G.targetZoom=getTargetZoom(); G.flashAlpha=0.85; },
+  },
+  { key:'crit',    tab:'atk', icon:'💥',  name:'치명타',   cost:8,  unlock:'crit',
+    stat()   { return Math.round(G.critChance*100)+'%'; },
+    canBuy() { return G.gold>=8; },
+    apply()  { G.gold-=8; G.critChance=Math.min(0.9,G.critChance+0.08); },
+  },
+  { key:'multi',   tab:'atk', icon:'🔱',  name:'다발',     cost:10, unlock:'multi',
+    stat()   { return G.multiShot+'발'; },
+    canBuy() { return G.gold>=10; },
+    apply()  { G.gold-=10; G.multiShot++; },
+  },
+  { key:'pierce',  tab:'atk', icon:'🏹',  name:'관통',     cost:10, unlock:'pierce',
+    stat()   { return G.pierce+'관'; },
+    canBuy() { return G.gold>=10; },
+    apply()  { G.gold-=10; G.pierce++; },
+  },
+  // ─ 방어 탭 ─
+  { key:'heal',    tab:'def', icon:'❤️',  name:'회복',     cost:8,  unlock:null,
+    stat()   { return G.tower.hp+'/'+G.tower.maxHp; },
+    canBuy() { return G.gold>=8 && G.tower.hp<G.tower.maxHp; },
+    apply()  { G.gold-=8; G.tower.hp=Math.min(G.tower.maxHp,G.tower.hp+Math.ceil(G.tower.maxHp*0.4)); },
+  },
+  { key:'maxhp',   tab:'def', icon:'💪',  name:'최대체력',  cost:9,  unlock:null,
+    stat()   { return '최대 '+G.tower.maxHp; },
+    canBuy() { return G.gold>=9; },
+    apply()  { G.gold-=9; G.tower.maxHp+=3; G.tower.hp+=3; },
+  },
+  { key:'armor',   tab:'def', icon:'🛡️',  name:'방어구',   cost:7,  unlock:null,
+    stat()   { return G.armor+'중첩'; },
+    canBuy() { return G.gold>=7; },
+    apply()  { G.gold-=7; G.armor++; },
+  },
+  { key:'vamp',    tab:'def', icon:'🩸',  name:'흡혈',     cost:9,  unlock:'vamp',
+    stat()   { return G.lifeSteal+'/킬'; },
+    canBuy() { return G.gold>=9; },
+    apply()  { G.gold-=9; G.lifeSteal++; },
+  },
+  { key:'regen',   tab:'def', icon:'🌿',  name:'재생',     cost:11, unlock:'regen',
+    stat()   { return G.regenRate+'/s'; },
+    canBuy() { return G.gold>=11; },
+    apply()  { G.gold-=11; G.regenRate++; },
+  },
+  // ─ 특수 탭 ─
+  { key:'explode', tab:'spc', icon:'💣',  name:'폭발',     cost:15, unlock:'explode',
+    stat()   { return 'r='+G.explodeR; },
+    canBuy() { return G.gold>=15; },
+    apply()  { G.gold-=15; G.explodeR+=15; },
+  },
+  { key:'slow',    tab:'spc', icon:'❄️',  name:'감속',     cost:12, unlock:'slow',
+    stat()   { return Math.round(G.slowPct*100)+'%'; },
+    canBuy() { return G.gold>=12; },
+    apply()  { G.gold-=12; G.slowPct=Math.min(0.8,G.slowPct+0.1); },
+  },
+  { key:'gemup',   tab:'spc', icon:'💎',  name:'젬증폭',   cost:12, unlock:'gemup',
+    stat()   { return 'x'+G.gemBonus.toFixed(1); },
+    canBuy() { return G.gold>=12; },
+    apply()  { G.gold-=12; G.gemBonus=parseFloat((G.gemBonus+0.5).toFixed(1)); },
+  },
+  { key:'goldup',  tab:'spc', icon:'🏅',  name:'골드증폭',  cost:11, unlock:'goldup',
+    stat()   { return 'x'+G.goldBonus.toFixed(1); },
+    canBuy() { return G.gold>=11; },
+    apply()  { G.gold-=11; G.goldBonus=parseFloat((G.goldBonus+0.5).toFixed(1)); },
+  },
+];
+
+/* ── 잠금 해제 정의 (상점) ── */
+const UNLOCKS = [
+  { key:'crit',    gems:3, tab:'atk', icon:'💥', name:'치명타 해금',    desc:'치명타 확률 업그레이드 해금 (2× 피해)' },
+  { key:'multi',   gems:5, tab:'atk', icon:'🔱', name:'다발 해금',      desc:'다발 사격 업그레이드 해금' },
+  { key:'pierce',  gems:5, tab:'atk', icon:'🏹', name:'관통 해금',      desc:'관통 업그레이드 해금' },
+  { key:'vamp',    gems:3, tab:'def', icon:'🩸', name:'흡혈 해금',      desc:'처치 시 HP 회복 업그레이드 해금' },
+  { key:'regen',   gems:4, tab:'def', icon:'🌿', name:'재생 해금',      desc:'초당 HP 자동 회복 해금' },
+  { key:'explode', gems:7, tab:'spc', icon:'💣', name:'폭발 해금',      desc:'적 처치 시 범위 폭발 해금' },
+  { key:'slow',    gems:4, tab:'spc', icon:'❄️', name:'감속 해금',      desc:'명중 시 적 감속 해금' },
+  { key:'gemup',   gems:5, tab:'spc', icon:'💎', name:'젬증폭 해금',    desc:'젬 획득량 배율 업그레이드 해금' },
+  { key:'goldup',  gems:4, tab:'spc', icon:'🏅', name:'골드증폭 해금',  desc:'골드 획득량 배율 업그레이드 해금' },
+];
 
 function resizeCanvas() {
   const aw = areaEl.clientWidth  || window.innerWidth;
@@ -505,6 +718,19 @@ function createState() {
     bullets: [],
     effects: [],
 
+    // New mechanics (all temp, reset each run)
+    critChance: 0,
+    multiShot:  1,
+    pierce:     0,
+    armor:      0,
+    lifeSteal:  0,
+    regenRate:  0,
+    regenTimer: 0,
+    slowPct:    0,
+    explodeR:   0,
+    gemBonus:   1.0,
+    goldBonus:  1.0,
+
     cx: CW / 2,
     cy: CH / 2,
     lastTime: 0,
@@ -540,6 +766,9 @@ function startGame() {
   G.gold = PERM.gold;
   G.gems = PERM.gems;
   applyPermStats();
+  buildCards();
+  setActiveTab(activeTab);
+  applyPendingHighlight();
 
   // Daily gem
   try {
@@ -602,6 +831,15 @@ function update(dt) {
   // Buff countdown
   if (G.tower.buffMs > 0) G.tower.buffMs = Math.max(0, G.tower.buffMs - dt);
 
+  // Regen
+  if (G.regenRate > 0) {
+    G.regenTimer += dt;
+    if (G.regenTimer >= 1000) {
+      G.regenTimer -= 1000;
+      G.tower.hp = Math.min(G.tower.maxHp, G.tower.hp + G.regenRate);
+    }
+  }
+
   // Animate leftover effects even during between phase
   for (let i = G.effects.length - 1; i >= 0; i--) {
     G.effects[i].t += dt;
@@ -654,26 +892,67 @@ function update(dt) {
       continue;
     }
 
-    let hit = false;
+    let removeBullet = false;
     for (let j = G.enemies.length - 1; j >= 0; j--) {
       const e = G.enemies[j];
-      const dx = b.x - e.x, dy = b.y - e.y;
-      if (dx * dx + dy * dy < (e.r + 5) * (e.r + 5)) {
-        const dmg = G.tower.buffMs > 0 ? G.tower.dmg * 2 : G.tower.dmg;
+      if (b.hitSet && b.hitSet.has(e)) continue; // already hit by this piercing bullet
+      const ddx = b.x - e.x, ddy = b.y - e.y;
+      if (ddx * ddx + ddy * ddy < (e.r + 5) * (e.r + 5)) {
+        if (b.hitSet) b.hitSet.add(e);
+        let dmg = G.tower.buffMs > 0 ? G.tower.dmg * 2 : G.tower.dmg;
+        if (b.crit) dmg *= 2;
+        // Slow on hit
+        if (G.slowPct > 0) e.slowTimer = 1500;
         e.hp -= dmg;
-        hit = true;
+
         if (e.hp <= 0) {
-          G.gold      += e.gold;
-          G.gems      += e.gem;
+          const gEarned  = Math.floor(e.gold * G.goldBonus);
+          const gmEarned = e.gem ? Math.floor(e.gem * G.gemBonus) : 0;
+          G.gold       += gEarned;
+          G.gems       += gmEarned;
           G.killCount++;
-          G.goldEarned += e.gold;
-          addFx(e.x, e.y, e.r * 2.8, e.boss ? '#f97316' : '#ef4444');
+          G.goldEarned += gEarned;
+          // Life steal
+          if (G.lifeSteal > 0) {
+            G.tower.hp = Math.min(G.tower.maxHp, G.tower.hp + G.lifeSteal);
+          }
+          // Explosion AOE
+          if (G.explodeR > 0) {
+            const ex = e.x, ey = e.y;
+            const exDmg = Math.max(1, Math.floor(G.tower.dmg * 0.5));
+            addFx(ex, ey, G.explodeR, '#f97316');
+            for (let k = G.enemies.length - 1; k >= 0; k--) {
+              const ek = G.enemies[k];
+              if (ek === e) continue;
+              const edx = ek.x - ex, edy = ek.y - ey;
+              if (edx * edx + edy * edy < G.explodeR * G.explodeR) {
+                ek.hp -= exDmg;
+                if (ek.hp <= 0) {
+                  G.gold       += Math.floor(ek.gold * G.goldBonus);
+                  G.killCount++;
+                  G.goldEarned += Math.floor(ek.gold * G.goldBonus);
+                  addFx(ek.x, ek.y, ek.r * 2.8, '#f97316');
+                  G.enemies.splice(k, 1);
+                  if (k <= j) j--;
+                }
+              }
+            }
+          } else {
+            addFx(e.x, e.y, e.r * 2.8, e.boss ? '#f97316' : '#ef4444');
+          }
           G.enemies.splice(j, 1);
         }
-        break;
+
+        // Pierce: bullet keeps going if pierceLeft > 0
+        if (b.pierceLeft > 0) {
+          b.pierceLeft--;
+        } else {
+          removeBullet = true;
+          break;
+        }
       }
     }
-    if (hit) G.bullets.splice(i, 1);
+    if (removeBullet) G.bullets.splice(i, 1);
   }
 
   // ── Move enemies toward tower ──
@@ -684,14 +963,18 @@ function update(dt) {
     const dist = Math.sqrt(dx * dx + dy * dy);
 
     if (dist < TOWER_HIT_R + e.r) {
-      G.tower.hp = Math.max(0, G.tower.hp - 1);
+      const dmgTaken = Math.max(1, Math.round(1 - G.armor * 0.05));
+      G.tower.hp = Math.max(0, G.tower.hp - dmgTaken);
       addFx(e.x, e.y, e.r * 2, '#f87171');
       G.enemies.splice(i, 1);
       if (G.tower.hp <= 0) { triggerGameOver(); return; }
       continue;
     }
 
-    const mv = e.spd * (dt / 16.667);
+    // Slow tick
+    if (e.slowTimer > 0) e.slowTimer = Math.max(0, e.slowTimer - dt);
+    const spdMult = (e.slowTimer > 0) ? (1 - G.slowPct) : 1;
+    const mv = e.spd * spdMult * (dt / 16.667);
     e.x += (dx / dist) * mv;
     e.y += (dy / dist) * mv;
   }
@@ -733,13 +1016,14 @@ function mkEnemy(isBoss) {
 
   return {
     x, y,
-    boss:  isBoss,
-    hp:    baseHp,
-    maxHp: baseHp,
-    r:     isBoss ? 17  : 9,
-    spd:   baseSpd,
-    gold:  isBoss ? 5   : 1,
-    gem:   isBoss ? 1   : 0,
+    boss:      isBoss,
+    hp:        baseHp,
+    maxHp:     baseHp,
+    r:         isBoss ? 17  : 9,
+    spd:       baseSpd,
+    gold:      isBoss ? 5   : 1,
+    gem:       isBoss ? 1   : 0,
+    slowTimer: 0,
   };
 }
 
@@ -751,9 +1035,21 @@ function fireTower() {
     if (d < minD) { minD = d; target = e; }
   }
   if (!target) return;
-  const dx = target.x - G.cx, dy = target.y - G.cy;
-  const len = Math.sqrt(dx * dx + dy * dy);
-  G.bullets.push({ x: G.cx, y: G.cy, dx: dx / len, dy: dy / len });
+  const baseAngle = Math.atan2(target.y - G.cy, target.x - G.cx);
+  const shots     = Math.max(1, G.multiShot);
+  const spread    = 0.18; // radians between bullets
+  for (let s = 0; s < shots; s++) {
+    const offset = (s - (shots - 1) / 2) * spread;
+    const angle  = baseAngle + offset;
+    const isCrit = G.critChance > 0 && Math.random() < G.critChance;
+    G.bullets.push({
+      x: G.cx, y: G.cy,
+      dx: Math.cos(angle), dy: Math.sin(angle),
+      crit: isCrit,
+      pierceLeft: G.pierce,
+      hitSet: G.pierce > 0 ? new Set() : null,
+    });
+  }
 }
 
 function addFx(x, y, maxR, color) {
@@ -859,14 +1155,15 @@ function render() {
 
   // Enemies
   for (const e of G.enemies) {
+    const slowed = e.slowTimer > 0;
     ctx.save();
     ctx.shadowBlur  = e.boss ? 22 : 10;
-    ctx.shadowColor = e.boss ? '#f97316' : '#ef4444';
+    ctx.shadowColor = slowed ? '#60a5fa' : (e.boss ? '#f97316' : '#ef4444');
     ctx.beginPath();
     ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
-    ctx.fillStyle   = e.boss ? '#c2410c' : '#b91c1c';
+    ctx.fillStyle   = slowed ? (e.boss ? '#1e3a8a' : '#1d4ed8') : (e.boss ? '#c2410c' : '#b91c1c');
     ctx.fill();
-    ctx.strokeStyle = e.boss ? '#fb923c' : '#f87171';
+    ctx.strokeStyle = slowed ? '#93c5fd' : (e.boss ? '#fb923c' : '#f87171');
     ctx.lineWidth   = e.boss ? 2.5 : 1.5;
     ctx.stroke();
     ctx.shadowBlur  = 0;
@@ -887,12 +1184,14 @@ function render() {
   }
 
   // Bullets
-  ctx.save();
-  ctx.shadowBlur = 8; ctx.shadowColor = '#fbbf24'; ctx.fillStyle = '#fde68a';
   for (const b of G.bullets) {
-    ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.save();
+    ctx.shadowBlur  = b.crit ? 12 : 8;
+    ctx.shadowColor = b.crit ? '#f97316' : '#fbbf24';
+    ctx.fillStyle   = b.crit ? '#fb923c' : '#fde68a';
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.crit ? 4 : 3, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
   }
-  ctx.restore();
 
   // Tower
   const TS = 26;
@@ -1019,59 +1318,95 @@ function renderHUD() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   IN-GAME UPGRADES (임시)
+   IN-GAME UPGRADES (임시) — 탭 시스템
 ═══════════════════════════════════════════════════════════════ */
+let activeTab = 'atk';
+let _pendingHighlight = null;
+
+function isUnlocked(key) {
+  return !key || !!PERM.unlocks[key];
+}
+
+function buildCards() {
+  for (const tabKey of ['atk', 'def', 'spc']) {
+    const pane = document.getElementById('pane-' + tabKey);
+    if (!pane) continue;
+    pane.innerHTML = '';
+    for (const upg of UPGRADES) {
+      if (upg.tab !== tabKey) continue;
+      const locked = !isUnlocked(upg.unlock);
+      const btn = document.createElement('button');
+      btn.id        = 'upg-card-' + upg.key;
+      btn.className = 'upg-card' + (locked ? ' locked' : '');
+      const ulDef = locked ? UNLOCKS.find(function(u){ return u.key === upg.unlock; }) : null;
+      const costStr = locked ? ((ulDef ? ulDef.gems : '?') + '💎') : upg.cost + '💰';
+      btn.innerHTML =
+        '<span class="card-icon">' + upg.icon + '</span>' +
+        '<span class="card-name">' + upg.name + '</span>' +
+        '<span class="card-stat" id="cs-' + upg.key + '">' + (locked ? '🔒' : upg.stat()) + '</span>' +
+        '<span class="card-cost">' + costStr + '</span>' +
+        '<span class="card-tag">'  + (locked ? '상점해제' : '임시') + '</span>';
+      if (!locked) {
+        btn.addEventListener('touchstart', function(ev) { ev.preventDefault(); }, { passive: false });
+        btn.addEventListener('touchend',   function(ev) { ev.preventDefault(); doUpgrade(upg.key); }, { passive: false });
+        btn.addEventListener('click', function() { doUpgrade(upg.key); });
+      }
+      pane.appendChild(btn);
+    }
+  }
+}
+
+function setActiveTab(tabKey) {
+  activeTab = tabKey;
+  for (const k of ['atk', 'def', 'spc']) {
+    const tb = document.getElementById('tab-' + k);
+    const pn = document.getElementById('pane-' + k);
+    if (tb) tb.classList.toggle('active', k === tabKey);
+    if (pn) pn.classList.toggle('active', k === tabKey);
+  }
+}
+
 function syncUI() {
   if (!G || G.phase === 'gameover') return;
-  const gold = G.gold;
-  const t    = G.tower;
-  setDisabled('ub-dmg',  gold < 5);
-  setDisabled('ub-spd',  gold < 7 || t.atkMs <= 200);
-  setDisabled('ub-rng',  gold < 6);
-  setDisabled('ub-heal', gold < 8 || t.hp >= t.maxHp);
-}
-
-function setDisabled(id, dis) {
-  document.getElementById(id).classList.toggle('disabled', dis);
-}
-
-function doUpgrade(type) {
-  if (!G || G.phase !== 'playing') return;
-  const t = G.tower;
-  if (type === 'dmg') {
-    if (G.gold < 5) return;
-    G.gold -= 5;
-    t.dmg += 1;
-  } else if (type === 'spd') {
-    if (G.gold < 7 || t.atkMs <= 200) return;
-    G.gold -= 7;
-    t.atkMs = Math.max(200, t.atkMs - 100);
-  } else if (type === 'rng') {
-    if (G.gold < 6) return;
-    G.gold -= 6;
-    t.range += 30;
-    G.rangeLevel++;
-    G.targetZoom = getTargetZoom();
-    G.flashAlpha = 0.85;
-  } else if (type === 'heal') {
-    if (G.gold < 8 || t.hp >= t.maxHp) return;
-    G.gold -= 8;
-    t.hp = Math.min(t.maxHp, t.hp + Math.ceil(t.maxHp * 0.4));
+  for (const upg of UPGRADES) {
+    const card = document.getElementById('upg-card-' + upg.key);
+    if (!card || !isUnlocked(upg.unlock)) continue;
+    const statEl = document.getElementById('cs-' + upg.key);
+    if (statEl) statEl.textContent = upg.stat();
+    card.classList.toggle('no-gold', !upg.canBuy());
   }
+}
+
+function doUpgrade(key) {
+  if (!G || G.phase !== 'playing') return;
+  const upg = UPGRADES.find(function(u) { return u.key === key; });
+  if (!upg || !isUnlocked(upg.unlock) || !upg.canBuy()) return;
+  upg.apply();
   syncUI();
 }
 
-function bindBtn(id, fn) {
-  const el = document.getElementById(id);
-  el.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
-  el.addEventListener('touchend',   function(e) { e.preventDefault(); fn(); }, { passive: false });
-  el.addEventListener('click', fn);
+function applyPendingHighlight() {
+  if (!_pendingHighlight) return;
+  const key = _pendingHighlight;
+  _pendingHighlight = null;
+  setTimeout(function() {
+    const card = document.getElementById('upg-card-' + key);
+    if (!card) return;
+    card.classList.add('card-highlight');
+    setTimeout(function() { card.classList.remove('card-highlight'); }, 1600);
+  }, 80);
 }
 
-bindBtn('ub-dmg',  doUpgrade.bind(null, 'dmg'));
-bindBtn('ub-spd',  doUpgrade.bind(null, 'spd'));
-bindBtn('ub-rng',  doUpgrade.bind(null, 'rng'));
-bindBtn('ub-heal', doUpgrade.bind(null, 'heal'));
+// Tab button bindings
+(function() {
+  for (const k of ['atk', 'def', 'spc']) {
+    const btn = document.getElementById('tab-' + k);
+    if (!btn) continue;
+    btn.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+    btn.addEventListener('touchend',   function(e) { e.preventDefault(); setActiveTab(k); }, { passive: false });
+    btn.addEventListener('click', function() { setActiveTab(k); });
+  }
+}());
 
 /* ═══════════════════════════════════════════════════════════════
    SHOP LOGIC
@@ -1079,6 +1414,7 @@ bindBtn('ub-heal', doUpgrade.bind(null, 'heal'));
 function openShop() {
   document.getElementById('results-screen').classList.remove('show');
   document.getElementById('shop-screen').classList.add('show');
+  buildUnlockUI();
   syncShopUI();
 }
 
@@ -1113,6 +1449,70 @@ function showShopFlash() {
   el.classList.add('show');
   clearTimeout(_flashTimer);
   _flashTimer = setTimeout(function() { el.classList.remove('show'); }, 1500);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHOP UNLOCK SECTION
+═══════════════════════════════════════════════════════════════ */
+function buildUnlockUI() {
+  const section = document.getElementById('unlock-section');
+  if (!section) return;
+  section.innerHTML = '<p class="unlock-title">🔒 특수 해금</p>';
+  for (const ul of UNLOCKS) {
+    const owned = !!PERM.unlocks[ul.key];
+    const div = document.createElement('div');
+    div.className = 'unlock-item' + (owned ? ' owned' : '');
+    div.id = 'unlock-item-' + ul.key;
+    div.innerHTML =
+      '<div class="ui-info">' +
+        '<span class="ui-name">' + ul.icon + ' ' + ul.name + '</span>' +
+        '<span class="ui-desc">' + ul.desc + '</span>' +
+      '</div>' +
+      '<button class="ui-btn' + (owned ? ' owned-btn' : '') + '" id="unlock-btn-' + ul.key + '">' +
+        (owned ? '보유' : ul.gems + '💎') +
+      '</button>';
+    section.appendChild(div);
+    if (!owned) {
+      const btn = div.querySelector('button');
+      btn.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+      btn.addEventListener('touchend',   function(e) { e.preventDefault(); buyUnlock(ul.key); }, { passive: false });
+      btn.addEventListener('click', function() { buyUnlock(ul.key); });
+    }
+  }
+}
+
+function syncUnlockUI() {
+  for (const ul of UNLOCKS) {
+    const owned = !!PERM.unlocks[ul.key];
+    const item  = document.getElementById('unlock-item-' + ul.key);
+    const btn   = document.getElementById('unlock-btn-' + ul.key);
+    if (!item || !btn) continue;
+    item.className = 'unlock-item' + (owned ? ' owned' : '');
+    if (owned) {
+      btn.className = 'ui-btn owned-btn';
+      btn.textContent = '보유';
+    } else {
+      btn.className = 'ui-btn' + (PERM.gems < ul.gems ? ' disabled' : '');
+      btn.textContent = ul.gems + '💎';
+    }
+  }
+}
+
+function buyUnlock(key) {
+  const ul = UNLOCKS.find(function(u) { return u.key === key; });
+  if (!ul || PERM.unlocks[ul.key] || PERM.gems < ul.gems) return;
+  PERM.gems -= ul.gems;
+  PERM.unlocks[ul.key] = true;
+  savePerm();
+  buildUnlockUI();
+  syncShopUI();
+  showShopFlash();
+  // Prepare highlight for when game starts
+  _pendingHighlight = ul.key;
+  // Rebuild cards now to show unlocked state
+  buildCards();
+  // Auto-switch to the relevant tab
+  setActiveTab(ul.tab);
 }
 
 function startNewGame() {
@@ -1150,6 +1550,8 @@ document.addEventListener('touchend', function(e) {
 ═══════════════════════════════════════════════════════════════ */
 resizeCanvas();
 loadPerm();
+buildCards();
+setActiveTab('atk');
 startGame();
 </script>
 </body>
