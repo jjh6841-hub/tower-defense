@@ -1057,6 +1057,40 @@ canvas {
 
 </div>
 
+<!-- ── 작업장 화면 ── -->
+<div id="screen-workshop" style="display:none; flex-direction:column; width:100%; height:100%; background:#030b10; position:fixed; inset:0; z-index:100; overflow:hidden;">
+
+  <!-- 상단 HUD -->
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px; border-bottom:1px solid rgba(0,255,255,0.15); flex-shrink:0; background:#040c14;">
+    <span style="color:#f59e0b; font-size:13px; font-family:monospace;">🪙 <span id="ws-gold">0</span></span>
+    <span style="color:#00ffff; font-size:13px; font-family:monospace;">💎 <span id="ws-gem">0</span></span>
+    <span style="color:#334455; font-size:13px; cursor:pointer;">▼</span>
+  </div>
+  <div style="text-align:center; padding:5px; font-size:10px; color:#00ffff; font-family:'Courier New',monospace; letter-spacing:3px; background:#040c14; border-bottom:1px solid rgba(0,255,255,0.10); flex-shrink:0;">작업장</div>
+
+  <!-- 카테고리 탭 -->
+  <div id="ws-tab-bar" style="display:flex; height:36px; background:#040c14; border-bottom:1px solid #0a2233; flex-shrink:0;">
+    <button class="ws-tab" data-tab="atk" style="flex:1; height:36px; background:none; border:none; border-bottom:2px solid #00ffff; color:#00ffff; font-size:11px; font-family:'Courier New',monospace; cursor:pointer;">⚔️ 공격</button>
+    <button class="ws-tab" data-tab="def" style="flex:1; height:36px; background:none; border:none; border-bottom:2px solid transparent; color:#334455; font-size:11px; font-family:'Courier New',monospace; cursor:pointer;">🛡️ 방어</button>
+    <button class="ws-tab" data-tab="spc" style="flex:1; height:36px; background:none; border:none; border-bottom:2px solid transparent; color:#334455; font-size:11px; font-family:'Courier New',monospace; cursor:pointer;">⭐ 특수</button>
+    <button class="ws-tab" data-tab="pwr" disabled style="flex:1; height:36px; background:none; border:none; border-bottom:2px solid transparent; color:#1a2a3a; font-size:11px; font-family:'Courier New',monospace; cursor:default; opacity:0.35;">🔺 파워</button>
+  </div>
+
+  <!-- 업그레이드 목록 -->
+  <div id="ws-content" style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:10px 12px; display:grid; grid-template-columns:1fr 1fr; gap:8px; align-content:start; padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));"></div>
+
+  <!-- 하단 네비게이션 -->
+  <div style="display:flex; flex-direction:row; border-top:1px solid #0a2233; background:#040c14; flex-shrink:0; padding-bottom:env(safe-area-inset-bottom,0px);">
+    <button id="ws-nav-home" style="flex:1; height:52px; background:none; border:none; color:#334455; font-size:11px; font-family:monospace; cursor:pointer;">⚔️<br>전투</button>
+    <button style="flex:1; height:52px; background:none; border:none; border-bottom:2px solid #00ffff; color:#00ffff; font-size:11px; font-family:monospace; cursor:pointer;">🔨<br>작업장</button>
+    <button style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; cursor:pointer;">🔒</button>
+    <button style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; cursor:pointer;">🔒</button>
+    <button style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; cursor:pointer;">🔒</button>
+    <button style="flex:1; height:52px; background:none; border:none; color:#334455; font-size:11px; font-family:monospace; cursor:pointer;">🛒<br>스토어</button>
+  </div>
+
+</div>
+
 <script>
 'use strict';
 
@@ -1084,6 +1118,7 @@ let PERM = {
   upgradeCount: 0,
   achievements: {},
   settings: { sound: true, music: true, vibration: true },
+  ws: {},
 };
 
 function loadPerm() {
@@ -1104,6 +1139,7 @@ function loadPerm() {
       PERM.upgradeCount = d.upgradeCount ?? 0;
       PERM.achievements = (d.achievements && typeof d.achievements === 'object') ? d.achievements : {};
       PERM.settings     = Object.assign({ sound: true, music: true, vibration: true }, d.settings || {});
+      PERM.ws           = (d.ws && typeof d.ws === 'object') ? d.ws : {};
     }
   } catch (_) {}
 }
@@ -1371,13 +1407,20 @@ function getTargetZoom() {
    GAME INIT / WAVE START
 ═══════════════════════════════════════════════════════════════ */
 function applyPermStats() {
-  const t    = G.tower;
-  t.dmg      = 3 + PERM.dmgLv;
-  t.atkMs    = Math.max(200, 1000 - PERM.spdLv * 40);
-  t.maxHp    = 10 + PERM.hpLv * 2;
-  t.hp       = t.maxHp;
-  t.range    = Math.min(CW, CH) * 0.45 + PERM.rngLv * 30;
-  G.rangeLevel = 5 + PERM.rngLv; // base tier 5 → zoom 1.0 at start
+  const t  = G.tower;
+  const ws = PERM.ws || {};
+  t.dmg        = 3 + PERM.dmgLv + (ws.damage    || 0);
+  t.atkMs      = Math.max(200, 1000 - PERM.spdLv * 40 - (ws.atkspd || 0) * 20);
+  t.maxHp      = 10 + PERM.hpLv * 2 + (ws.maxHp || 0) * 5;
+  t.hp         = t.maxHp;
+  t.range      = Math.min(CW, CH) * 0.45 + PERM.rngLv * 30;
+  t.critChance = (ws.critChance || 0) * 0.05;
+  t.critMult   = 1.5 + (ws.critMult   || 0) * 0.25;
+  t.defense    = (ws.defense    || 0) * 0.01;
+  t.hpRegen    = (ws.hpRegen    || 0) * 0.5;
+  G.goldMult   = 1 + (ws.goldGain || 0) * 0.1;
+  G.gemMult    = 1 + (ws.gemGain  || 0) * 0.1;
+  G.rangeLevel = 5 + PERM.rngLv;
   G.zoom       = getTargetZoom();
   G.targetZoom = G.zoom;
 }
@@ -2517,6 +2560,251 @@ document.addEventListener('touchend', function(e) {
     }
   });
   obs.observe(homeEl, { attributes: true, attributeFilter: ['style'] });
+
+}());
+</script>
+
+<!-- ── 작업장 스크립트 ── -->
+<script>
+(function() {
+  'use strict';
+
+  /* ══ WS_ITEMS 정의 ══ */
+  var WS_ITEMS = {
+    damage:     { tab:'atk', name:'대미지',      maxLv:20,
+      cost: function(lv) { return 3 + Math.floor(lv * 1.8); },
+      cur:  function(lv) { return '+' + lv; },
+      nxt:  function(lv) { return '+' + (lv + 1); } },
+    atkspd:     { tab:'atk', name:'공격 속도',   maxLv:10,
+      cost: function(lv) { return 5 + lv * 4; },
+      cur:  function(lv) { return lv === 0 ? '기본' : '-' + (lv * 20) + 'ms'; },
+      nxt:  function(lv) { return '-' + ((lv + 1) * 20) + 'ms'; } },
+    critChance: { tab:'atk', name:'치명타 확률', maxLv:10,
+      cost: function(lv) { return 8 + lv * 5; },
+      cur:  function(lv) { return (lv * 5) + '%'; },
+      nxt:  function(lv) { return ((lv + 1) * 5) + '%'; } },
+    critMult:   { tab:'atk', name:'치명타 계수', maxLv:5,
+      cost: function(lv) { return 15 + lv * 12; },
+      cur:  function(lv) { return (1.5 + lv * 0.25).toFixed(2) + 'x'; },
+      nxt:  function(lv) { return (1.5 + (lv + 1) * 0.25).toFixed(2) + 'x'; } },
+    maxHp:      { tab:'def', name:'최대 체력',   maxLv:20,
+      cost: function(lv) { return 3 + Math.floor(lv * 1.8); },
+      cur:  function(lv) { return '+' + (lv * 5); },
+      nxt:  function(lv) { return '+' + ((lv + 1) * 5); } },
+    defense:    { tab:'def', name:'방어력',      maxLv:10,
+      cost: function(lv) { return 8 + lv * 5; },
+      cur:  function(lv) { return lv + '%'; },
+      nxt:  function(lv) { return (lv + 1) + '%'; } },
+    hpRegen:    { tab:'def', name:'체력 재생',   maxLv:5,
+      cost: function(lv) { return 10 + lv * 10; },
+      cur:  function(lv) { return (lv * 0.5).toFixed(1) + '/s'; },
+      nxt:  function(lv) { return ((lv + 1) * 0.5).toFixed(1) + '/s'; } },
+    lifeSteal:  { tab:'def', name:'흡혈', locked:true, maxLv:5,
+      cost: function(lv) { return 20 + lv * 15; },
+      cur:  function(lv) { return lv + '%'; },
+      nxt:  function(lv) { return (lv + 1) + '%'; } },
+    goldGain:   { tab:'spc', name:'골드 획득량', maxLv:10,
+      cost: function(lv) { return 5 + lv * 4; },
+      cur:  function(lv) { return 'x' + (1 + lv * 0.1).toFixed(1); },
+      nxt:  function(lv) { return 'x' + (1 + (lv + 1) * 0.1).toFixed(1); } },
+    gemGain:    { tab:'spc', name:'보석 획득량', maxLv:5,
+      cost: function(lv) { return 10 + lv * 10; },
+      cur:  function(lv) { return 'x' + (1 + lv * 0.1).toFixed(1); },
+      nxt:  function(lv) { return 'x' + (1 + (lv + 1) * 0.1).toFixed(1); } },
+  };
+
+  var wsActiveTab = 'atk';
+
+  /* ══ 화면 열기 / 닫기 ══ */
+  function openWorkshop() {
+    document.getElementById('screen-home').style.display = 'none';
+    var el = document.getElementById('screen-workshop');
+    el.style.display = 'flex';
+    syncWorkshopHUD();
+    buildWorkshopContent(wsActiveTab);
+  }
+
+  function closeWorkshop() {
+    document.getElementById('screen-workshop').style.display = 'none';
+    var home = document.getElementById('screen-home');
+    home.style.display = 'flex';
+    try { syncShopUI(); } catch (e) {}
+  }
+
+  /* ══ HUD 동기화 ══ */
+  function syncWorkshopHUD() {
+    try {
+      document.getElementById('ws-gold').textContent = PERM.gold;
+      document.getElementById('ws-gem').textContent  = PERM.gems;
+    } catch (e) {}
+  }
+
+  /* ══ 콘텐츠 빌드 ══ */
+  function buildWorkshopContent(tab) {
+    wsActiveTab = tab;
+    var container = document.getElementById('ws-content');
+    if (!container) return;
+    container.innerHTML = '';
+
+    /* 탭 활성 스타일 */
+    var tabs = document.querySelectorAll('.ws-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      var isAct = tabs[i].dataset.tab === tab;
+      tabs[i].style.color        = isAct ? '#00ffff' : (tabs[i].disabled ? '#1a2a3a' : '#334455');
+      tabs[i].style.borderBottom = isAct ? '2px solid #00ffff' : '2px solid transparent';
+    }
+
+    var ws    = PERM.ws || {};
+    var keys  = Object.keys(WS_ITEMS).filter(function(k) { return WS_ITEMS[k].tab === tab; });
+    keys.forEach(function(key) { appendCard(container, key, ws); });
+
+    /* 공격 탭: 범위 잠금 해제 카드 (전체 너비) */
+    if (tab === 'atk') appendRangeUnlockCard(container, ws);
+  }
+
+  /* ══ 업그레이드 카드 생성 ══ */
+  function appendCard(container, key, ws) {
+    var cfg    = WS_ITEMS[key];
+    var lv     = ws[key] || 0;
+    var maxed  = lv >= cfg.maxLv;
+    var cost   = maxed ? 0 : cfg.cost(lv);
+    var afford = PERM.gold >= cost;
+    var locked = !!cfg.locked;
+
+    var card = document.createElement('div');
+    card.style.cssText =
+      'background:#0a1a2a;' +
+      'border:1px solid ' + (locked ? '#1a2a3a' : '#0a3344') + ';' +
+      'border-left:2px solid rgba(0,255,255,' + (locked ? '0.08' : '0.30') + ');' +
+      'padding:12px;display:flex;flex-direction:row;' +
+      'justify-content:space-between;align-items:center;' +
+      'opacity:' + (locked ? '0.4' : '1') + ';' +
+      'transition:border-color 0.2s;' +
+      '-webkit-tap-highlight-color:transparent;';
+
+    var rightHTML;
+    if (locked) {
+      rightHTML = '<span style="font-size:11px;color:#1a2a3a;font-family:\'Courier New\',monospace;">🔒</span>';
+    } else if (maxed) {
+      rightHTML =
+        '<span style="font-size:15px;color:#00ffff;font-family:\'Courier New\',monospace;font-weight:bold;">' + cfg.cur(lv) + '</span>' +
+        '<span style="font-size:10px;color:#334455;font-family:\'Courier New\',monospace;margin-top:3px;">MAX</span>';
+    } else {
+      rightHTML =
+        '<span style="font-size:15px;color:#00ffff;font-family:\'Courier New\',monospace;font-weight:bold;">' +
+          cfg.cur(lv) + '<span style="font-size:9px;color:#334455;"> → ' + cfg.nxt(lv) + '</span>' +
+        '</span>' +
+        '<button data-key="' + key + '" style="background:#030b10;border:1px solid ' +
+          (afford ? '#0a3344' : '#ef4444') + ';color:' +
+          (afford ? '#f59e0b' : '#ef4444') + ';font-size:11px;' +
+          'font-family:\'Courier New\',monospace;padding:4px 8px;cursor:pointer;' +
+          '-webkit-appearance:none;margin-top:3px;">🪙' + cost + '</button>';
+    }
+
+    card.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:3px;">' +
+        '<span style="font-size:12px;color:#94a3b8;font-family:\'Courier New\',monospace;">' + cfg.name + '</span>' +
+        '<span style="font-size:10px;color:#334455;font-family:\'Courier New\',monospace;">Lv.' + lv + (maxed ? ' ✓' : '') + '</span>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:0px;">' + rightHTML + '</div>';
+
+    if (!locked && !maxed) {
+      var btn = card.querySelector('button');
+      (function(k, c) {
+        btn.addEventListener('click', function() { wsUpgrade(k, c); });
+      }(key, card));
+    }
+    container.appendChild(card);
+  }
+
+  /* ══ 범위 해금 카드 ══ */
+  function appendRangeUnlockCard(container, ws) {
+    var unlocked = !!ws.rangeUnlock;
+    var cost     = 50;
+    var afford   = PERM.gold >= cost;
+
+    var card = document.createElement('div');
+    card.style.cssText =
+      'grid-column:1/-1;' +
+      'background:#0a1a2a;' +
+      'border:1px solid ' + (unlocked ? '#00ffff44' : '#0a3344') + ';' +
+      'border-left:2px solid rgba(0,255,255,' + (unlocked ? '0.8' : '0.30') + ');' +
+      'padding:12px;display:flex;flex-direction:row;' +
+      'justify-content:space-between;align-items:center;' +
+      'transition:border-color 0.2s;';
+
+    var rightHTML = unlocked
+      ? '<span style="font-size:12px;color:#00ffff;font-family:\'Courier New\',monospace;">✓ 해금됨</span>'
+      : '<button style="background:#030b10;border:1px solid ' +
+          (afford ? '#0a3344' : '#ef4444') + ';color:' +
+          (afford ? '#f59e0b' : '#ef4444') + ';font-size:11px;' +
+          'font-family:\'Courier New\',monospace;padding:4px 10px;cursor:pointer;-webkit-appearance:none;">🪙50</button>';
+
+    card.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:3px;">' +
+        '<span style="font-size:12px;color:#94a3b8;font-family:\'Courier New\',monospace;">범위 업그레이드 해금</span>' +
+        '<span style="font-size:10px;color:#334455;font-family:\'Courier New\',monospace;">인게임 범위 업그레이드 활성화</span>' +
+      '</div>' +
+      '<div>' + rightHTML + '</div>';
+
+    if (!unlocked) {
+      var btn = card.querySelector('button');
+      btn.addEventListener('click', function() {
+        if (PERM.gold < 50) { flashCard(card, '#ef4444'); return; }
+        PERM.gold -= 50;
+        if (!PERM.ws) PERM.ws = {};
+        PERM.ws.rangeUnlock = true;
+        savePerm();
+        flashCard(card, '#00ffff');
+        syncWorkshopHUD();
+        setTimeout(function() { buildWorkshopContent(wsActiveTab); }, 220);
+      });
+    }
+    container.appendChild(card);
+  }
+
+  /* ══ 업그레이드 실행 ══ */
+  function wsUpgrade(key, card) {
+    var ws    = PERM.ws || {};
+    var cfg   = WS_ITEMS[key];
+    var lv    = ws[key] || 0;
+    if (lv >= cfg.maxLv) return;
+    var cost  = cfg.cost(lv);
+    if (PERM.gold < cost) { flashCard(card, '#ef4444'); return; }
+    PERM.gold -= cost;
+    ws[key]    = lv + 1;
+    PERM.ws    = ws;
+    savePerm();
+    flashCard(card, '#00ffff');
+    syncWorkshopHUD();
+    setTimeout(function() { buildWorkshopContent(wsActiveTab); }, 220);
+  }
+
+  /* ══ 플래시 효과 ══ */
+  function flashCard(card, color) {
+    var orig = card.style.borderColor;
+    card.style.borderColor = color;
+    setTimeout(function() { card.style.borderColor = orig; }, 200);
+  }
+
+  /* ══ 탭 이벤트 ══ */
+  var tabBar = document.getElementById('ws-tab-bar');
+  if (tabBar) {
+    tabBar.addEventListener('click', function(e) {
+      var btn = e.target.closest
+        ? e.target.closest('.ws-tab')
+        : (e.target.classList.contains('ws-tab') ? e.target : null);
+      if (!btn || btn.disabled) return;
+      buildWorkshopContent(btn.dataset.tab);
+    });
+  }
+
+  /* ══ 네비게이션 ══ */
+  var navHome = document.getElementById('ws-nav-home');
+  if (navHome) navHome.addEventListener('click', closeWorkshop);
+
+  var workshopBtn = document.getElementById('h-nav-workshop');
+  if (workshopBtn) workshopBtn.addEventListener('click', openWorkshop);
 
 }());
 </script>
