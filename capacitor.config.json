@@ -1,0 +1,14 @@
+{
+  "appId": "com.studiox.neoncore",
+  "appName": "NEON CORE",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#030b10",
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

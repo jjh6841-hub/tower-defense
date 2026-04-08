@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NEON CORE</string>
+    <string name="title_activity_main">NEON CORE</string>
+    <string name="package_name">com.studiox.neoncore</string>
+    <string name="custom_url_scheme">com.studiox.neoncore</string>
+</resources>

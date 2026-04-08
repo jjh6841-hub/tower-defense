@@ -1,0 +1,4151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>타워 디펜스</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-dark:       #0a0e1a;
+  --bg-panel:      #111827;
+  --bg-card:       #1a2332;
+  --border:        #2a3f5f;
+  --accent-blue:   #3b82f6;
+  --accent-green:  #10b981;
+  --accent-yellow: #f59e0b;
+  --accent-red:    #ef4444;
+  --text-primary:  #f1f5f9;
+  --text-secondary:#94a3b8;
+  --laser-bg: #030b10;
+  --laser-primary: #00ffff;
+  --laser-secondary: #0099bb;
+  --laser-dark: #0a1a2a;
+  --laser-border: #0a3344;
+  --laser-gold: #f59e0b;
+  --laser-purple: #cc44ff;
+  --laser-red: #ef4444;
+  --laser-green: #00ff88;
+}
+*, *::before, *::after {
+  margin: 0; padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  font-family: 'Courier New', monospace !important;
+}
+html {
+  height: 100%;
+  height: 100dvh;
+  height: -webkit-fill-available;
+  overflow: hidden;
+}
+body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  height: -webkit-fill-available;
+  overflow: hidden;
+  background: var(--bg-dark);
+  font-family: 'Noto Sans KR', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── LAYOUT ─────────────────────────────────────────────────── */
+#screen-game {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: none;   /* 초기 숨김 — startNewGame() 시 flex로 전환 */
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  background: var(--bg-dark);
+}
+#canvas-area {
+  -webkit-flex: 1;
+  flex: 1;
+  min-height: 0;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: center;
+  justify-content: center;
+  -webkit-align-items: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+canvas {
+  display: block;
+  touch-action: none;
+  -ms-touch-action: none;
+}
+
+/* ─── OVERLAY SCREENS (results + shop) ───────────────────────── */
+.overlay-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,14,26,0.97);
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  z-index: 999;
+  padding: 24px 16px 20px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.overlay-screen.show {
+  display: -webkit-flex;
+  display: flex;
+}
+
+/* ── Results screen ── */
+#results-screen {
+  -webkit-justify-content: center;
+  justify-content: center;
+  gap: 0;
+  background: rgba(3,11,16,0.97);
+}
+#go-title {
+  font-family: 'Courier New', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: #ef4444;
+  text-shadow: 0 0 10px #ef4444, 0 0 30px #ef4444;
+  letter-spacing: 4px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.go-stats {
+  width: 100%;
+  max-width: 300px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.go-stat-card {
+  background: #060f18;
+  border: 1px solid #0a2233;
+  padding: 10px 14px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.go-stat-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: 'Courier New', monospace;
+}
+.go-stat-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Courier New', monospace;
+}
+.go-reward-section {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 20px;
+}
+.go-reward-label {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  font-family: 'Courier New', monospace;
+}
+.go-reward-row {
+  font-size: 14px;
+  font-family: 'Courier New', monospace;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.go-reward-gold { color: #f59e0b; }
+.go-reward-gem  { color: #00ffff; }
+.go-reward-ach  { color: #a78bfa; font-size: 12px; line-height: 1.6; }
+.go-btn-row {
+  display: -webkit-flex;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 300px;
+}
+.go-btn {
+  -webkit-flex: 1;
+  flex: 1;
+  height: 44px;
+  background: #030b10;
+  border: 1px solid #00ffff;
+  color: #ffffff;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-appearance: none;
+}
+.go-btn:active { background: #001a22; }
+.go-btn-home { border-color: #cc44ff; }
+
+/* ── Home screen (홈/상점) ── */
+#screen-home {
+  -webkit-justify-content: flex-start;
+  justify-content: flex-start;
+  gap: 0;
+}
+.shop-title {
+  font-size: clamp(22px, 7vw, 32px);
+  color: var(--accent-yellow);
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+.shop-currency {
+  display: -webkit-flex;
+  display: flex;
+  gap: 24px;
+  font-size: clamp(15px, 4.5vw, 18px);
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #f0f9ff;
+}
+.shop-items {
+  width: 100%;
+  max-width: 420px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.shop-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 10px;
+}
+.si-info {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  gap: 2px;
+  -webkit-flex: 1;
+  flex: 1;
+}
+.si-name  { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.si-level { font-size: 11px; color: var(--text-secondary); }
+.si-effect{ font-size: 12px; color: var(--text-secondary); }
+.si-btn {
+  background: var(--accent-blue);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 44px;
+  min-width: 66px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  font-family: inherit;
+  white-space: nowrap;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+}
+.si-btn:active { filter: brightness(0.85); }
+.si-btn.disabled { opacity: 0.32; pointer-events: none; }
+
+/* ── Shop unlock section ── */
+#unlock-section {
+  width: 100%;
+  max-width: 420px;
+  margin-bottom: 14px;
+}
+.unlock-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a78bfa;
+  letter-spacing: 1px;
+  padding: 2px 0 8px;
+}
+.unlock-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 13px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.unlock-item.owned { opacity: 0.42; border-color: var(--border); }
+.ui-info { -webkit-flex: 1; flex: 1; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; gap: 2px; }
+.ui-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.ui-desc { font-size: 11px; color: var(--text-secondary); }
+.ui-btn {
+  background: #7c3aed;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 42px;
+  min-width: 58px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  font-family: inherit;
+  white-space: nowrap;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+}
+.ui-btn:active { filter: brightness(0.85); }
+.ui-btn.disabled  { opacity: 0.32; pointer-events: none; }
+.ui-btn.owned-btn { background: var(--bg-card); color: var(--accent-green); pointer-events: none; }
+
+/* ── Shared overlay button ── */
+.ov-btn {
+  background: var(--accent-green);
+  color: #fff;
+  font-size: clamp(16px, 5vw, 20px);
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 48px;
+  min-height: 54px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  font-family: inherit;
+  letter-spacing: 1px;
+  width: 100%;
+  max-width: 320px;
+}
+.ov-btn:active { filter: brightness(0.85); }
+.ov-btn.blue { background: var(--accent-blue); }
+
+/* ─── IN-GAME UPGRADE PANEL ─────────────────────────────────── */
+#screen-shop {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: #030b10;
+  border-top: 1px solid rgba(0,255,255,0.20);
+  z-index: 5;
+  pointer-events: auto;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+/* ── Tab bar ── */
+#tab-bar {
+  display: -webkit-flex;
+  display: flex;
+  height: 30px;
+  background: #030b10;
+  border-bottom: 1px solid #0a2233;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.tab-btn {
+  -webkit-flex: 1;
+  flex: 1;
+  background: #030b10;
+  border: none;
+  border-right: 1px solid #0a2233;
+  border-bottom: 1px solid transparent;
+  color: #334455;
+  font-size: 10px;
+  font-weight: 700;
+  height: 30px;
+  padding: 0 4px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  -webkit-transition: color 0.12s, border-color 0.12s;
+  transition: color 0.12s, border-color 0.12s;
+}
+.tab-btn:last-of-type { border-right: none; }
+.tab-btn.active {
+  color: #00ffff;
+  border-bottom-color: #00ffff;
+  background: #030b10;
+}
+/* ── Card row ── */
+#tab-content {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 6px 6px calc(8px + env(safe-area-inset-bottom, 0px));
+  scrollbar-width: none;
+  background: #030b10;
+}
+#tab-content::-webkit-scrollbar { display: none; }
+.tab-pane { display: none; }
+.tab-pane.active {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  gap: 6px;
+  width: -webkit-max-content;
+  width: max-content;
+  min-height: 66px;
+}
+
+/* ── Upgrade card — corner-bracket style ── */
+.upg-card {
+  /* size */
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  max-width: 60px !important;
+  box-sizing: border-box !important;
+  padding: 4px 5px !important;
+  /* appearance */
+  --cc: rgba(0,255,255,0.60);   /* corner color variable */
+  background-color: #030b10 !important;
+  background-image:
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)) !important;
+  background-size:
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px,
+    6px 1px, 1px 6px !important;
+  background-position:
+    0 0,   0 0,
+    100% 0,   100% 0,
+    0 100%,   0 100%,
+    100% 100%,  100% 100% !important;
+  background-repeat: no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  /* layout */
+  display: -webkit-flex !important;
+  display: flex !important;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  cursor: pointer;
+  -webkit-appearance: none;
+  font-family: 'Courier New', monospace;
+  -webkit-flex-shrink: 0;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+.upg-card:active {
+  --cc: rgba(0,255,255,1);
+  background-color: #001a22 !important;
+}
+.upg-card.no-gold {
+  --cc: rgba(239,68,68,1);
+  opacity: 1 !important;
+}
+.upg-card.is-max {
+  --cc: rgba(204,68,255,0.8);
+  opacity: 1 !important;
+}
+
+/* 아이콘 숨김 */
+.card-icon { display: none !important; }
+.card-tag  { display: none !important; }
+
+/* 이름 */
+.card-name {
+  font-size: 9px !important;
+  font-weight: 400;
+  color: #0099bb;
+  text-align: center;
+  line-height: 1.1;
+  width: 100%;
+  border-bottom: 1px solid #0a2233;
+  padding-bottom: 3px;
+  font-family: 'Courier New', monospace;
+}
+/* 수치 */
+.card-stat {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #00ffff;
+  text-align: center;
+  line-height: 1;
+  -webkit-flex: 1;
+  flex: 1;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  width: 100%;
+  border-bottom: 1px solid #0a2233;
+  font-family: 'Courier New', monospace;
+}
+/* 비용 */
+.card-cost {
+  font-size: 9px !important;
+  color: #f59e0b;
+  text-align: center;
+  width: 100%;
+  line-height: 1;
+  font-family: 'Courier New', monospace;
+}
+.upg-card.no-gold .card-cost { color: #ef4444; }
+
+/* 호환 클래스 */
+.upgrade-btn {
+  width: 60px !important;
+  height: 60px !important;
+  font-size: 9px !important;
+}
+
+/* ── 해금 후 글로우 애니메이션 ── */
+@-webkit-keyframes cardGlow {
+  0%,100% { --cc: rgba(0,255,255,0.6); }
+  50%      { --cc: rgba(204,68,255,1); box-shadow: 0 0 12px rgba(204,68,255,0.7); }
+}
+@keyframes cardGlow {
+  0%,100% { --cc: rgba(0,255,255,0.6); }
+  50%      { --cc: rgba(204,68,255,1); box-shadow: 0 0 12px rgba(204,68,255,0.7); }
+}
+.card-highlight {
+  -webkit-animation: cardGlow 0.5s ease-in-out 3;
+  animation: cardGlow 0.5s ease-in-out 3;
+}
+
+/* ── Shop flash ── */
+#shop-flash {
+  font-size: 13px;
+  color: #4ade80;
+  font-weight: 700;
+  min-height: 20px;
+  margin-bottom: 6px;
+  opacity: 0;
+  -webkit-transition: opacity 0.25s;
+  transition: opacity 0.25s;
+}
+#shop-flash.show { opacity: 1; }
+
+/* wave banner is now rendered on canvas — no HTML element needed */
+
+
+/* ── Loading screen ── */
+#screen-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #030b10;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  gap: 0;
+  -webkit-transition: opacity 0.5s ease;
+  transition: opacity 0.5s ease;
+  overflow: hidden;
+}
+#screen-loading.fade-out { opacity: 0; pointer-events: none; }
+
+/* radial glow overlay */
+#screen-loading::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0,255,255,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* version badge */
+#ld-version {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(18px + env(safe-area-inset-right, 0px));
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #334455;
+}
+
+/* center block */
+#ld-center {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+/* hexagon icon */
+.ld-hex {
+  width: 56px;
+  height: 32px;
+  position: relative;
+  border-left: 2px solid #00ffff;
+  border-right: 2px solid #00ffff;
+  filter: drop-shadow(0 0 6px #00ffff);
+}
+.ld-hex::before,
+.ld-hex::after {
+  content: '';
+  position: absolute;
+  left: -11px;
+  width: 76px;
+  height: 0;
+  border-left: 2px solid transparent;
+  border-right: 2px solid transparent;
+}
+.ld-hex::before {
+  top: -17px;
+  border-bottom: 17px solid #00ffff;
+}
+.ld-hex::after {
+  bottom: -17px;
+  border-top: 17px solid #00ffff;
+}
+
+/* title text */
+#ld-title {
+  font-family: 'Courier New', monospace;
+  font-size: 38px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 4px;
+  text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff;
+  text-align: center;
+  line-height: 1;
+}
+
+/* bottom block */
+#ld-bottom {
+  position: absolute;
+  bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  left: 0; right: 0;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 10px;
+  z-index: 1;
+}
+#ld-maker {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #334455;
+  letter-spacing: 1px;
+}
+#ld-loading-label {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #00ffff;
+  letter-spacing: 1px;
+}
+#ld-pct {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #00ffff;
+}
+#ld-bar-wrap {
+  width: 220px;
+  height: 6px;
+  background: #0a1a22;
+  border-radius: 3px;
+  overflow: hidden;
+}
+#ld-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: #00ffcc;
+  border-radius: 3px;
+  -webkit-transition: width 0.05s linear;
+  transition: width 0.05s linear;
+}
+
+/* ── Speed button ── */
+#speed-btn {
+  --cc: rgba(0,255,255,0.7);
+  background-color: #030b10;
+  background-image:
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc));
+  background-size:
+    6px 1px, 1px 6px, 6px 1px, 1px 6px,
+    6px 1px, 1px 6px, 6px 1px, 1px 6px;
+  background-position:
+    0 0, 0 0, 100% 0, 100% 0,
+    0 100%, 0 100%, 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  border: none;
+  border-radius: 0;
+  color: #00ffff;
+  font-size: 10px;
+  font-weight: 700;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  flex-shrink: 0;
+  -webkit-flex-shrink: 0;
+  -webkit-appearance: none;
+}
+#speed-btn:active {
+  --cc: rgba(0,255,255,1);
+  background-color: #001a22;
+}
+
+/* ── Pause menu ── */
+#pause-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,14,26,0.92);
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  z-index: 200;
+  gap: 8px;
+  padding: 24px;
+}
+#pause-screen.show { display: -webkit-flex; display: flex; }
+.pause-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.pause-btn {
+  width: 240px;
+  height: 48px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  -webkit-appearance: none;
+  -webkit-transition: filter 0.1s;
+  transition: filter 0.1s;
+}
+.pause-btn:active { filter: brightness(1.3); }
+.pause-btn.green { border-color: var(--accent-green); }
+.pause-btn.red   { border-color: var(--accent-red); }
+
+/* ── Confirm popup ── */
+#confirm-popup {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.72);
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  z-index: 400;
+}
+#confirm-popup.show { display: -webkit-flex; display: flex; }
+.confirm-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px 20px;
+  max-width: 300px;
+  width: 90%;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 16px;
+}
+.confirm-msg {
+  font-size: 15px;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.confirm-btns {
+  display: -webkit-flex;
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+.confirm-ok, .confirm-cancel {
+  -webkit-flex: 1;
+  flex: 1;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-appearance: none;
+}
+.confirm-ok     { background: var(--accent-red); color: #fff; }
+.confirm-cancel { background: #334155; color: var(--text-primary); }
+
+/* ── Achievement screen ── */
+#achieve-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(10,14,26,0.97);
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  z-index: 250;
+  padding: 20px 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  gap: 8px;
+}
+#achieve-screen.show { display: -webkit-flex; display: flex; }
+.achieve-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fbbf24;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+#ach-list { width: 100%; max-width: 360px; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; gap: 8px; }
+.ach-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  gap: 12px;
+}
+.ach-item.claimed { opacity: 0.45; border-color: #1e293b; }
+.ach-icon { font-size: 22px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+.ach-info { -webkit-flex: 1; flex: 1; }
+.ach-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.ach-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.ach-prog { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+.ach-reward { font-size: 12px; font-weight: 700; color: #a78bfa; -webkit-flex-shrink: 0; flex-shrink: 0; text-align: right; }
+
+/* ── Settings screen ── */
+#settings-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(3,11,16,0.95);
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: flex-start;
+  justify-content: flex-start;
+  z-index: 250;
+  padding: 40px 20px 20px;
+  gap: 0;
+}
+#settings-screen.show { display: -webkit-flex; display: flex; }
+.settings-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #00ffff;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 2px;
+  margin-bottom: 16px;
+}
+.settings-card {
+  width: 100%;
+  max-width: 320px;
+  --cc: rgba(0,255,255,0.5);
+  background-color: #0a1a2a;
+  background-image:
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc)),
+    linear-gradient(var(--cc), var(--cc)), linear-gradient(var(--cc), var(--cc));
+  background-size:
+    10px 1px, 1px 10px, 10px 1px, 1px 10px,
+    10px 1px, 1px 10px, 10px 1px, 1px 10px;
+  background-position:
+    0 0, 0 0, 100% 0, 100% 0,
+    0 100%, 0 100%, 100% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  padding: 12px 0;
+  margin-bottom: 16px;
+}
+.setting-row {
+  width: 100%;
+  padding: 12px 16px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-align-items: center;
+  align-items: center;
+  border-bottom: 1px solid #0a3344;
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-label {
+  font-size: 14px;
+  color: #f1f5f9;
+  font-family: 'Courier New', monospace;
+}
+.toggle-track {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: #0a3344;
+  position: relative;
+  cursor: pointer;
+  -webkit-appearance: none;
+  border: none;
+  -webkit-transition: background 0.2s;
+  transition: background 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+.toggle-track.on { background: #00ffff; }
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  -webkit-transition: left 0.2s;
+  transition: left 0.2s;
+  pointer-events: none;
+}
+.toggle-track.on .toggle-knob { left: 22px; }
+.settings-btn-row {
+  width: 100%;
+  max-width: 320px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  gap: 8px;
+}
+.settings-back-btn {
+  background: #0a1a2a;
+  border: 1px solid #0a3344;
+  color: #94a3b8;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  -webkit-appearance: none;
+  text-align: center;
+}
+.settings-back-btn:active { background: #0d2030; }
+.settings-reset-btn {
+  background: #030b10;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  -webkit-appearance: none;
+  text-align: center;
+}
+.settings-reset-btn:active { background: #1a0505; }
+.back-btn {
+  margin-top: 8px;
+  background: #0a1a2a;
+  border: 1px solid #0a3344;
+  color: #94a3b8;
+  border-radius: 0;
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  -webkit-appearance: none;
+}
+.back-btn:active { background: #0d2030; }
+
+/* Nav lock tooltip popup */
+.nav-lock-tooltip {
+  position: fixed;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0a1a2a;
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  padding: 6px 14px;
+  white-space: nowrap;
+  z-index: 9999;
+  pointer-events: none;
+  animation: fadeInOut 1.5s ease forwards;
+}
+@keyframes fadeInOut {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+/* ── Title screen ── */
+#screen-title {
+  position: fixed; inset: 0; z-index: 9998;
+  background: radial-gradient(ellipse at center, #001a22 0%, #030b10 70%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  overflow: hidden;
+  transition: opacity 0.4s ease;
+}
+#screen-title.show { display: flex; }
+#screen-title.fade-out { opacity: 0; pointer-events: none; }
+/* Grid overlay */
+#screen-title::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+#tt-version {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(18px + env(safe-area-inset-right, 0px));
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #334455;
+}
+#tt-title {
+  font-family: 'Courier New', monospace;
+  font-size: 38px;
+  font-weight: 700;
+  color: #00ffff;
+  letter-spacing: 8px;
+  text-shadow: 0 0 10px #00ffff, 0 0 25px #00ffff, 0 0 50px #00ffff;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+#tt-line {
+  width: 120px;
+  height: 1px;
+  background: rgba(0,255,255,0.4);
+  margin: 12px 0 8px;
+  position: relative;
+  z-index: 1;
+}
+#tt-sub {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #0099bb;
+  letter-spacing: 4px;
+  position: relative;
+  z-index: 1;
+}
+.title-tower-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 30px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.title-tower {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #00ffff;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: #001a22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: towerPulse 2s ease-in-out infinite;
+}
+.title-tower-inner {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(0,255,255,0.5);
+}
+@keyframes towerPulse {
+  0%, 100% { filter: drop-shadow(0 0 10px #00ffff) drop-shadow(0 0 20px rgba(0,255,255,0.3)); }
+  50% { filter: drop-shadow(0 0 20px #00ffff) drop-shadow(0 0 40px #00ffff); }
+}
+.orbit-dot {
+  width: 4px;
+  height: 4px;
+  background: #00ffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -2px 0 0 -2px;
+  animation: orbit 3s linear infinite;
+  box-shadow: 0 0 6px #00ffff;
+}
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(60px); }
+  to { transform: rotate(360deg) translateX(60px); }
+}
+#tt-tap {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #00ffff;
+  letter-spacing: 2px;
+  animation: blink 1.2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+#tt-tap-line {
+  width: 80px;
+  height: 1px;
+  background: rgba(0,255,255,0.2);
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+#tt-maker {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: #334455;
+  z-index: 1;
+}
+</style>
+</head>
+<body>
+
+<!-- ── 로딩 화면 ── -->
+<div id="screen-loading">
+  <span id="ld-version">v1.0.0</span>
+  <div id="ld-center">
+    <div class="ld-hex"></div>
+    <div id="ld-title">NEON CORE</div>
+  </div>
+  <div id="ld-bottom">
+    <span id="ld-maker">MADE BY STUDIO_X</span>
+    <span id="ld-loading-label">Loading...</span>
+    <span id="ld-pct">0%</span>
+    <div id="ld-bar-wrap"><div id="ld-bar-fill"></div></div>
+  </div>
+</div>
+
+<div id="screen-game">
+  <div id="canvas-area">
+    <canvas id="gameCanvas"></canvas>
+    <div id="screen-shop">
+      <div id="tab-bar">
+        <button id="speed-btn">1×</button>
+        <button class="tab-btn active" id="tab-atk">/ ATTACK</button>
+        <button class="tab-btn"        id="tab-def">/ DEFENSE</button>
+        <button class="tab-btn"        id="tab-spc">/ SPECIAL</button>
+      </div>
+      <div id="tab-content">
+        <div class="tab-pane active" id="pane-atk"></div>
+        <div class="tab-pane"        id="pane-def"></div>
+        <div class="tab-pane"        id="pane-spc"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 일시정지 메뉴 ── -->
+<div id="pause-screen">
+  <div class="pause-title">|| 일시정지</div>
+  <button class="pause-btn green" id="btn-resume">▶ 계속하기</button>
+  <button class="pause-btn" id="btn-restart">:: 다시하기</button>
+  <button class="pause-btn" id="btn-home">[] 홈화면으로</button>
+  <button class="pause-btn" id="btn-achieve">★ 업적</button>
+  <button class="pause-btn" id="btn-settings">설정</button>
+</div>
+
+<!-- ── 업적 화면 ── -->
+<div id="achieve-screen">
+  <div class="achieve-title">★ 업적</div>
+  <div id="ach-list"></div>
+  <button class="back-btn" id="btn-achieve-back">← 뒤로</button>
+</div>
+
+<!-- ── 설정 화면 ── -->
+<div id="settings-screen">
+  <div class="settings-title">설정 SETTINGS</div>
+  <div class="settings-card">
+    <div class="setting-row">
+      <span class="setting-label">SFX 효과음</span>
+      <button class="toggle-track on" id="tog-sound"><span class="toggle-knob"></span></button>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">BGM 배경음악</span>
+      <button class="toggle-track on" id="tog-music"><span class="toggle-knob"></span></button>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">VIB 진동</span>
+      <button class="toggle-track on" id="tog-vibration"><span class="toggle-knob"></span></button>
+    </div>
+    <div class="setting-row">
+      <span class="setting-label">LNG 언어</span>
+      <button class="toggle-track" id="tog-lang"><span class="toggle-knob"></span></button>
+    </div>
+  </div>
+  <div class="settings-btn-row">
+    <button class="settings-back-btn" id="btn-settings-back">← 뒤로</button>
+    <button class="settings-reset-btn" id="btn-data-reset">데이터 초기화</button>
+  </div>
+</div>
+
+<!-- ── 확인 팝업 ── -->
+<div id="confirm-popup">
+  <div class="confirm-box">
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" id="confirm-cancel">취소</button>
+      <button class="confirm-ok" id="confirm-ok">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 출석 보상 팝업 ── -->
+<div id="daily-popup" style="display:none; position:fixed; inset:0; background:rgba(3,11,16,0.95); z-index:10000; align-items:center; justify-content:center; flex-direction:column;">
+  <div style="background:#0a1a2a; border:1px solid #00ffff; padding:24px 28px; max-width:280px; width:90%; text-align:center;">
+    <div id="daily-title" style="color:#00ffff; font-family:'Courier New',monospace; font-size:16px; font-weight:bold; margin-bottom:8px;"></div>
+    <div id="daily-streak" style="color:#f59e0b; font-family:'Courier New',monospace; font-size:12px; margin-bottom:16px;"></div>
+    <div style="display:flex; justify-content:center; gap:20px; margin-bottom:16px;">
+      <div><div style="color:#f59e0b; font-family:'Courier New',monospace; font-size:22px; font-weight:bold;" id="daily-gold"></div><div style="color:#94a3b8; font-size:9px; font-family:monospace;">GOLD</div></div>
+      <div><div style="color:#00ffff; font-family:'Courier New',monospace; font-size:22px; font-weight:bold;" id="daily-gem"></div><div style="color:#94a3b8; font-size:9px; font-family:monospace;">GEM</div></div>
+    </div>
+    <div id="daily-bonus" style="color:#cc44ff; font-family:'Courier New',monospace; font-size:11px; margin-bottom:12px; display:none;"></div>
+    <button id="daily-claim-btn" style="background:#030b10; border:1px solid #00ffff; color:#00ffff; font-family:'Courier New',monospace; font-size:13px; padding:8px 24px; cursor:pointer; width:100%;">받기</button>
+  </div>
+</div>
+
+<!-- ── 타이틀 화면 ── -->
+<div id="screen-title">
+  <span id="tt-version">v1.0.0</span>
+  <div id="tt-title">NEON CORE</div>
+  <div id="tt-line"></div>
+  <div id="tt-sub">TOWER DEFENSE</div>
+  <div class="title-tower-wrap">
+    <div class="title-tower"><div class="title-tower-inner"></div></div>
+    <div class="orbit-dot" style="animation-delay:0s;"></div>
+    <div class="orbit-dot" style="animation-delay:-1s;"></div>
+    <div class="orbit-dot" style="animation-delay:-2s;"></div>
+  </div>
+  <div id="tt-tap-line"></div>
+  <div id="tt-tap">- TAP TO START -</div>
+  <span id="tt-maker">MADE WITH ♥ BY STUDIO_X</span>
+</div>
+
+<!-- ── 결과 화면 ── -->
+<div id="results-screen" class="overlay-screen">
+  <div id="go-title">GAME OVER</div>
+  <div class="go-stats">
+    <div class="go-stat-card">
+      <span class="go-stat-label">생존 웨이브</span>
+      <span class="go-stat-val" id="r-wave">-</span>
+    </div>
+    <div class="go-stat-card">
+      <span class="go-stat-label">처치한 적</span>
+      <span class="go-stat-val" id="r-kills">-</span>
+    </div>
+    <div class="go-stat-card">
+      <span class="go-stat-label">최고 기록</span>
+      <span class="go-stat-val" id="r-best">-</span>
+    </div>
+  </div>
+  <div class="go-reward-section">
+    <div class="go-reward-label">획득 보상</div>
+    <div class="go-reward-row go-reward-gold" id="r-gold-row">◈ 획득 골드: <span id="r-gold">0</span></div>
+    <div class="go-reward-row go-reward-gem" id="r-gem-row" style="display:none">◆ 획득 보석: <span id="r-gems">0</span></div>
+    <div class="go-reward-row go-reward-ach" id="r-ach-row" style="display:none"></div>
+    <div id="r-unlock-row" style="display:none; font-size:12px; color:#00ffff; font-family:'Courier New',monospace; margin-top:4px;"></div>
+  </div>
+  <div class="go-btn-row">
+    <button class="go-btn" id="btn-retry">재시도</button>
+    <button class="go-btn go-btn-home" id="btn-go-home">홈</button>
+  </div>
+</div>
+
+<!-- ── 홈화면 ── -->
+<div id="screen-home" style="display:none; flex-direction:column; width:100%; height:100%; background:#030b10; position:fixed; inset:0; z-index:100; overflow:hidden;">
+
+  <!-- JS 호환용 숨김 요소 (syncShopUI / buildUnlockUI 참조) -->
+  <div style="display:none" aria-hidden="true">
+    <span id="sl-dmg">Lv.0</span><span id="se-dmg">3→4</span><button id="sb-dmg">5◈</button>
+    <span id="sl-spd">Lv.0</span><span id="se-spd">1.0s</span><button id="sb-spd">7◈</button>
+    <span id="sl-rng">Lv.0</span><span id="se-rng">기본</span><button id="sb-rng">6◈</button>
+    <span id="sl-hp">Lv.0</span><span id="se-hp">10→15</span><button id="sb-hp">8◈</button>
+    <div id="unlock-section"></div>
+    <p id="shop-flash"></p>
+  </div>
+
+  <!-- 상단 HUD -->
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:calc(8px + env(safe-area-inset-top, 0px)) 12px 8px; border-bottom:1px solid rgba(0,255,255,0.15); flex-shrink:0;">
+    <span style="color:#f59e0b; font-size:13px; font-family:monospace;">◈ <span id="home-gold">0</span></span>
+    <span style="color:#00ffff; font-size:13px; font-family:monospace;">◆ <span id="home-gem">0</span></span>
+    <span style="color:#334455; font-size:13px; cursor:pointer;">▼</span>
+  </div>
+
+  <!-- 중앙 콘텐츠 -->
+  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:0 16px; position:relative;">
+
+    <!-- 좌측 아이콘 버튼 -->
+    <div style="position:absolute; left:8px; top:20px; display:flex; flex-direction:column; gap:8px; z-index:10;">
+      <button id="side-achieve" style="width:36px; height:36px; background:#0a1a2a; border:1px solid #0a3344; color:#00ffff; font-family:monospace; font-size:10px; cursor:pointer;" title="업적">▣<br><span style="font-size:7px;">업적</span></button>
+      <button id="side-event" data-sidelock="event" style="width:36px; height:36px; background:#060f18; border:1px solid #0a2233; color:#1a2a3a; font-family:monospace; font-size:10px; cursor:pointer;" title="이벤트 (웨이브 10 달성 시 해금)">▣<br><span style="font-size:7px;">이벤트</span></button>
+      <button id="side-ranking" data-sidelock="ranking" style="width:36px; height:36px; background:#060f18; border:1px solid #0a2233; color:#1a2a3a; font-family:monospace; font-size:10px; cursor:pointer;" title="랭킹 (웨이브 20 달성 시 해금)">▣<br><span style="font-size:7px;">랭킹</span></button>
+      <button id="side-power" data-sidelock="power" style="width:36px; height:36px; background:#060f18; border:1px solid #0a2233; color:#1a2a3a; font-family:monospace; font-size:10px; cursor:pointer;" title="파워스톤 (웨이브 30 달성 시 해금)">▣<br><span style="font-size:7px;">파워</span></button>
+    </div>
+
+    <!-- 타이틀 -->
+    <div id="neon-core-title" style="font-family:'Courier New',monospace; font-size:28px; font-weight:bold; color:#00ffff; letter-spacing:6px; text-shadow:0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff; text-align:center; margin:20px 0;">NEON CORE</div>
+
+    <!-- 정보 카드 2개 -->
+    <div style="display:flex; flex-direction:row; gap:8px; width:100%;">
+
+      <!-- 총 코인 보너스 카드 -->
+      <div style="flex:1; background:#0a1a2a; border:1px solid #0a3344; padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:6px;">
+        <div style="color:#94a3b8; font-size:10px; font-family:monospace; white-space:nowrap;">총 코인 보너스</div>
+        <div style="color:#00ffff; font-size:20px; font-family:'Courier New',monospace; font-weight:bold; white-space:nowrap;">x1.00</div>
+      </div>
+
+      <!-- 난이도 카드 -->
+      <div style="flex:1; background:#0a1a2a; border:1px solid #0a3344; padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:6px;">
+        <div style="color:#94a3b8; font-size:10px; font-family:monospace; white-space:nowrap;">난이도</div>
+        <div style="display:flex; flex-direction:row; align-items:center; gap:6px; width:100%; justify-content:center;">
+          <button id="tier-prev" style="background:none; border:none; color:#00ffff; font-size:14px; cursor:pointer; padding:8px 14px; min-width:44px; min-height:44px;">◀</button>
+          <span id="tier-name" style="color:#ffffff; font-size:14px; font-family:monospace; font-weight:bold; white-space:nowrap; min-width:40px; text-align:center;">티어 1</span>
+          <button id="tier-next" style="background:none; border:none; color:#00ffff; font-size:14px; cursor:pointer; padding:8px 14px; min-width:44px; min-height:44px;">▶</button>
+        </div>
+        <div style="color:#94a3b8; font-size:10px; font-family:monospace; white-space:nowrap;">최고 웨이브: <span id="home-best-wave">0</span></div>
+        <div style="color:#00ffff; font-size:10px; font-family:monospace; white-space:nowrap;">◆ x<span id="tier-multiplier">1.0</span></div>
+      </div>
+
+    </div>
+
+    <!-- 전투 시작 버튼 -->
+    <button id="btn-start-game" style="width:200px; height:52px; background:#030b10; border:2px solid #cc44ff; color:#ffffff; font-size:18px; font-family:'Courier New',monospace; font-weight:bold; cursor:pointer; letter-spacing:2px; text-shadow:0 0 8px #cc44ff; white-space:nowrap;">
+      전투 시작
+    </button>
+
+  </div>
+
+  <!-- 하단 네비게이션 -->
+  <div style="display:flex; flex-direction:row; border-top:1px solid #0a2233; background:#040c14; flex-shrink:0; padding-bottom:env(safe-area-inset-bottom, 0px);">
+    <button class="nav-btn active" data-screen="home" style="flex:1; height:52px; background:none; border:none; color:#00ffff; font-size:11px; font-family:monospace; cursor:pointer; border-bottom:2px solid #00ffff;"><span style="font-size:16px; color:#00ffff;">X</span><br>전투</button>
+    <button class="nav-btn" id="h-nav-workshop" data-screen="workshop" style="flex:1; height:52px; background:none; border:none; color:#334455; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:16px; color:#334455;">◈</span><br>강화</button>
+    <button class="nav-btn" id="h-nav-tournament" data-navlock="tournament" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">토너먼트</span></button>
+    <button class="nav-btn" id="h-nav-guild" data-navlock="guild" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">길드</span></button>
+    <button class="nav-btn" id="h-nav-season" data-navlock="season" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">시즌</span></button>
+    <button class="nav-btn" id="h-nav-store" data-screen="shop" style="flex:1; height:52px; background:none; border:none; color:#334455; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:16px; color:#334455;">◉</span><br>스토어</button>
+  </div>
+
+</div>
+
+<!-- ── 강화 화면 ── -->
+<div id="screen-workshop" style="display:none; flex-direction:column; width:100%; height:100%; background:#030b10; position:fixed; inset:0; z-index:100; overflow:hidden;">
+
+  <!-- 상단 HUD -->
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px; border-bottom:1px solid rgba(0,255,255,0.15); flex-shrink:0; background:#040c14;">
+    <span style="color:#f59e0b; font-size:13px; font-family:monospace;">◈ <span id="ws-gold">0</span></span>
+    <span style="color:#00ffff; font-size:13px; font-family:monospace;">◆ <span id="ws-gem">0</span></span>
+    <span style="color:#334455; font-size:13px; cursor:pointer;">▼</span>
+  </div>
+  <div style="text-align:center; padding:5px; font-size:10px; color:#00ffff; font-family:'Courier New',monospace; letter-spacing:3px; background:#040c14; border-bottom:1px solid rgba(0,255,255,0.10); flex-shrink:0;">강화</div>
+
+  <!-- 카테고리 탭 -->
+  <div id="ws-tab-bar" style="display:flex; height:36px; background:#040c14; border-bottom:1px solid #0a2233; flex-shrink:0;">
+    <button class="ws-tab" data-tab="atk" style="flex:1; height:36px; background:none; border:none; border-bottom:2px solid #00ffff; color:#00ffff; font-size:11px; font-family:'Courier New',monospace; cursor:pointer;">/ 공격</button>
+    <button class="ws-tab" data-tab="def" style="flex:1; height:36px; background:none; border:none; border-bottom:2px solid transparent; color:#334455; font-size:11px; font-family:'Courier New',monospace; cursor:pointer;">□ 방어</button>
+    <button class="ws-tab" data-tab="spc" style="flex:1; height:36px; background:none; border:none; border-bottom:2px solid transparent; color:#334455; font-size:11px; font-family:'Courier New',monospace; cursor:pointer;">* 특수</button>
+    <button class="ws-tab" data-tab="pwr" disabled style="flex:1; height:36px; background:none; border:none; border-bottom:2px solid transparent; color:#1a2a3a; font-size:11px; font-family:'Courier New',monospace; cursor:default; opacity:0.35;">▲ 파워</button>
+  </div>
+
+  <!-- 업그레이드 목록 -->
+  <div id="ws-content" style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:10px 12px; display:grid; grid-template-columns:1fr 1fr; gap:8px; align-content:start; padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));"></div>
+
+  <!-- 하단 네비게이션 -->
+  <div style="display:flex; flex-direction:row; border-top:1px solid #0a2233; background:#040c14; flex-shrink:0; padding-bottom:env(safe-area-inset-bottom,0px);">
+    <button id="ws-nav-home" style="flex:1; height:52px; background:none; border:none; color:#334455; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:16px; color:#334455;">X</span><br>전투</button>
+    <button style="flex:1; height:52px; background:none; border:none; border-bottom:2px solid #00ffff; color:#00ffff; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:16px; color:#00ffff;">◈</span><br>강화</button>
+    <button data-navlock="tournament" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">토너먼트</span></button>
+    <button data-navlock="guild" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">길드</span></button>
+    <button data-navlock="season" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">시즌</span></button>
+    <button id="ws-nav-store" style="flex:1; height:52px; background:none; border:none; color:#334455; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:16px; color:#334455;">◉</span><br>스토어</button>
+  </div>
+
+</div>
+
+<!-- ── 스토어 화면 ── -->
+<div id="screen-store" style="display:none; flex-direction:column; width:100%; height:100%; background:#030b10; position:fixed; inset:0; z-index:100; overflow:hidden;">
+  <!-- 상단 HUD -->
+  <div style="display:flex; justify-content:space-between; align-items:center; padding:calc(8px + env(safe-area-inset-top,0px)) 16px 10px; border-bottom:1px solid rgba(0,255,255,0.15); flex-shrink:0; background:#040c14;">
+    <span style="color:#f59e0b; font-family:monospace; font-size:13px;">◈ <span id="store-gold">0</span></span>
+    <span style="color:#00ffff; font-family:monospace; font-size:11px; letter-spacing:1px;">S T O R E</span>
+    <span style="color:#00ffff; font-family:monospace; font-size:13px;">◆ <span id="store-gem">0</span></span>
+  </div>
+  <!-- 탭 -->
+  <div id="store-tab-bar" style="display:flex; background:#040c14; border-bottom:1px solid #0a2233; flex-shrink:0;">
+    <button class="store-tab active" data-tab="gem" style="flex:1; height:34px; background:none; border:none; color:#00ffff; font-family:monospace; font-size:10px; border-bottom:2px solid #00ffff; cursor:pointer;">◆ 보석</button>
+    <button class="store-tab" data-tab="package" style="flex:1; height:34px; background:none; border:none; color:#334455; font-family:monospace; font-size:10px; border-bottom:2px solid transparent; cursor:pointer;">◈ 패키지</button>
+    <button class="store-tab" data-tab="unlock" style="flex:1; height:34px; background:none; border:none; color:#334455; font-family:monospace; font-size:10px; border-bottom:2px solid transparent; cursor:pointer;">▣ 잠금해제</button>
+  </div>
+  <!-- 콘텐츠 -->
+  <div id="store-content" style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:env(safe-area-inset-bottom,0px);"></div>
+  <!-- 하단 네비게이션 -->
+  <div style="display:flex; flex-direction:row; border-top:1px solid #0a2233; background:#040c14; flex-shrink:0; padding-bottom:env(safe-area-inset-bottom, 0px);">
+    <button id="st-nav-home" style="flex:1; height:52px; background:none; border:none; color:#334455; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:16px; color:#334455;">X</span><br>전투</button>
+    <button id="st-nav-workshop" style="flex:1; height:52px; background:none; border:none; color:#334455; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:16px; color:#334455;">◈</span><br>강화</button>
+    <button data-navlock="tournament" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">토너먼트</span></button>
+    <button data-navlock="guild" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">길드</span></button>
+    <button data-navlock="season" data-locked="true" style="flex:1; height:52px; background:none; border:none; color:#1a2a3a; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:14px;">■</span><br><span style="font-size:8px;">시즌</span></button>
+    <button style="flex:1; height:52px; background:none; border:none; border-bottom:2px solid #00ffff; color:#00ffff; font-size:11px; font-family:monospace; cursor:pointer;"><span style="font-size:16px; color:#00ffff;">◉</span><br>스토어</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ── Audio Manager ──
+var AudioManager = {
+  ctx: null, bgmGain: null, sfxGain: null, bgmOscs: [],
+  init: function() {
+    if (this.ctx) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      this.bgmGain = this.ctx.createGain();
+      this.sfxGain = this.ctx.createGain();
+      this.bgmGain.connect(this.ctx.destination);
+      this.sfxGain.connect(this.ctx.destination);
+      this.bgmGain.gain.value = 0.3;
+      this.sfxGain.gain.value = 0.5;
+    } catch(e) {}
+  },
+  playBGM: function() {
+    if (!this.ctx || this.bgmOscs.length > 0) return;
+    var freqs = [55, 110, 165];
+    var self = this;
+    for (var i = 0; i < freqs.length; i++) {
+      try {
+        var osc = this.ctx.createOscillator();
+        var gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freqs[i];
+        gain.gain.value = 0.05;
+        osc.connect(gain);
+        gain.connect(this.bgmGain);
+        osc.start();
+        this.bgmOscs.push(osc);
+      } catch(e) {}
+    }
+  },
+  stopBGM: function() {
+    for (var i = 0; i < this.bgmOscs.length; i++) {
+      try { this.bgmOscs[i].stop(); } catch(e) {}
+    }
+    this.bgmOscs = [];
+  },
+  playSfx: function(type) {
+    if (!this.ctx || !PERM.settings.sound) return;
+    try {
+      var osc = this.ctx.createOscillator();
+      var gain = this.ctx.createGain();
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      var t = this.ctx.currentTime;
+      if (type === 'shoot') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, t);
+        osc.frequency.exponentialRampToValueAtTime(200, t + 0.1);
+        gain.gain.setValueAtTime(0.3, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+        osc.start(); osc.stop(t + 0.1);
+      } else if (type === 'hit') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, t);
+        osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+        gain.gain.setValueAtTime(0.2, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        osc.start(); osc.stop(t + 0.15);
+      } else if (type === 'upgrade') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, t);
+        osc.frequency.setValueAtTime(660, t + 0.1);
+        osc.frequency.setValueAtTime(880, t + 0.2);
+        gain.gain.setValueAtTime(0.3, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        osc.start(); osc.stop(t + 0.3);
+      } else if (type === 'wave_clear') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523, t);
+        osc.frequency.setValueAtTime(659, t + 0.15);
+        osc.frequency.setValueAtTime(784, t + 0.3);
+        gain.gain.setValueAtTime(0.4, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+        osc.start(); osc.stop(t + 0.5);
+      } else if (type === 'game_over') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, t);
+        osc.frequency.exponentialRampToValueAtTime(50, t + 1.0);
+        gain.gain.setValueAtTime(0.4, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+        osc.start(); osc.stop(t + 1.0);
+      } else if (type === 'boss') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(100, t);
+        osc.frequency.setValueAtTime(80, t + 0.2);
+        osc.frequency.setValueAtTime(100, t + 0.4);
+        gain.gain.setValueAtTime(0.5, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+        osc.start(); osc.stop(t + 0.6);
+      }
+    } catch(e) {}
+  },
+  toggleBGM: function(on) { if(this.bgmGain) this.bgmGain.gain.value = on ? 0.3 : 0; },
+  toggleSFX: function(on) { if(this.sfxGain) this.sfxGain.gain.value = on ? 0.5 : 0; },
+};
+
+// ── Daily Reward ──
+var DailyRewards = [
+  { gem: 2, gold: 5 },
+  { gem: 2, gold: 10 },
+  { gem: 3, gold: 10 },
+  { gem: 3, gold: 15 },
+  { gem: 5, gold: 20 },
+  { gem: 5, gold: 20 },
+  { gem: 10, gold: 30 },
+];
+
+function checkDailyReward() {
+  var today = new Date().toDateString();
+  var lastLogin = localStorage.getItem('td_daily_login');
+  if (lastLogin === today) return;
+  var streak = parseInt(localStorage.getItem('td_daily_streak') || '0');
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  var isConsec = lastLogin && new Date(lastLogin).toDateString() === yesterday.toDateString();
+  var newStreak = isConsec ? streak + 1 : 1;
+  localStorage.setItem('td_daily_login', today);
+  localStorage.setItem('td_daily_streak', String(newStreak));
+  var reward = DailyRewards[(newStreak - 1) % 7];
+  // Apply reward
+  PERM.gold += reward.gold;
+  PERM.gems += reward.gem;
+  savePerm();
+  // Show popup
+  showDailyPopup(newStreak, reward);
+}
+
+function showDailyPopup(streak, reward) {
+  var popup = document.getElementById('daily-popup');
+  if (!popup) return;
+  document.getElementById('daily-title').textContent = 'DAY ' + streak + ' 출석 보상';
+  document.getElementById('daily-streak').textContent = streak + '일 연속 출석!';
+  document.getElementById('daily-gold').textContent = '◈+' + reward.gold;
+  document.getElementById('daily-gem').textContent = '◆+' + reward.gem;
+  var bonusEl = document.getElementById('daily-bonus');
+  if ((streak % 7) === 0) {
+    bonusEl.textContent = '★ 주간 보너스!';
+    bonusEl.style.display = '';
+  } else {
+    bonusEl.style.display = 'none';
+  }
+  popup.style.display = 'flex';
+}
+
+// ── Achievement Toast ──
+function showAchievementToast(name) {
+  var existing = document.querySelector('.ach-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.className = 'ach-toast';
+  toast.textContent = '▣ 업적 달성: ' + name;
+  toast.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#0a1a2a;border:1px solid #00ffff;color:#00ffff;font-family:"Courier New",monospace;font-size:12px;padding:8px 16px;z-index:9999;white-space:nowrap;pointer-events:none;animation:fadeInOut 2s ease forwards;';
+  document.body.appendChild(toast);
+  setTimeout(function() { if (toast.parentNode) toast.remove(); }, 2000);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CANVAS SETUP
+═══════════════════════════════════════════════════════════════ */
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+const areaEl = document.getElementById('canvas-area');
+
+let CW = 360, CH = 640; // logical canvas dimensions
+
+/* ── 영구 데이터 (게임 종료 후에도 유지) ── */
+let PERM = {
+  gold:    10,  // 시작 골드
+  gems:    0,
+  dmgLv:   0,
+  spdLv:   0,
+  rngLv:   0,
+  hpLv:    0,
+  unlocks: {},  // { crit: true, multi: true, ... }
+  bestWave:     0,
+  totalKills:   0,
+  bossKills:    0,
+  upgradeCount: 0,
+  achievements: {},
+  settings: { sound: true, music: true, vibration: true },
+  ws: {},
+};
+
+function loadPerm() {
+  try {
+    const s = localStorage.getItem('td_perm');
+    if (s) {
+      const d = JSON.parse(s);
+      PERM.gold    = d.gold    ?? 10;
+      PERM.gems    = d.gems    ?? 0;
+      PERM.dmgLv   = d.dmgLv  ?? 0;
+      PERM.spdLv   = d.spdLv  ?? 0;
+      PERM.rngLv   = d.rngLv  ?? 0;
+      PERM.hpLv    = d.hpLv   ?? 0;
+      PERM.unlocks      = (d.unlocks && typeof d.unlocks === 'object') ? d.unlocks : {};
+      PERM.bestWave     = d.bestWave     ?? 0;
+      PERM.totalKills   = d.totalKills   ?? 0;
+      PERM.bossKills    = d.bossKills    ?? 0;
+      PERM.upgradeCount = d.upgradeCount ?? 0;
+      PERM.achievements = (d.achievements && typeof d.achievements === 'object') ? d.achievements : {};
+      PERM.settings     = Object.assign({ sound: true, music: true, vibration: true }, d.settings || {});
+      PERM.ws           = (d.ws && typeof d.ws === 'object') ? d.ws : {};
+    }
+  } catch (_) {}
+}
+function savePerm() {
+  try { localStorage.setItem('td_perm', JSON.stringify(PERM)); } catch (_) {}
+}
+
+/* ── 상점 아이템 정의 ── */
+function getUpgradeCost(baseCost, currentLevel) {
+  return Math.floor(baseCost * Math.pow(1.4, currentLevel));
+}
+
+const SHOP_ITEMS = {
+  dmg: {
+    baseCost: 5,  maxLv: 99,
+    name: '/ 공격력',
+    effect: () => (3 + PERM.dmgLv) + ' → ' + (3 + PERM.dmgLv + 1),
+  },
+  spd: {
+    baseCost: 7,  maxLv: 4,
+    name: '// 공격속도',
+    effect: () => {
+      const cur  = (Math.max(200, 1000 - PERM.spdLv * 40) / 1000).toFixed(2);
+      const next = (Math.max(200, 1000 - (PERM.spdLv + 1) * 40) / 1000).toFixed(2);
+      return cur + 's → ' + next + 's';
+    },
+  },
+  rng: {
+    baseCost: 6,  maxLv: 99,
+    name: '(+) 공격범위',
+    effect: () => 'Lv.' + PERM.rngLv + ' → Lv.' + (PERM.rngLv + 1),
+  },
+  hp: {
+    baseCost: 8,  maxLv: 99,
+    name: '+ 최대 체력',
+    effect: () => (10 + PERM.hpLv * 2) + ' → ' + (10 + (PERM.hpLv + 1) * 2),
+  },
+};
+
+/* ── 인게임 업그레이드 정의 (임시) ── */
+function upgCost(key, base) {
+  if (!G) return base;
+  return getUpgradeCost(base, G.upgLvl[key] || 0);
+}
+const UPGRADES = [
+  // ─ 공격 탭 ─
+  { key:'dmg',     tab:'atk', icon:'/',  name:'공격력',   baseCost:5,  unlock:null,
+    cost()   { return upgCost('dmg',5); },
+    stat()   { return '피해 '+G.tower.dmg; },
+    canBuy() { return G.gold>=upgCost('dmg',5); },
+    apply()  { var c=upgCost('dmg',5); G.gold-=c; G.upgLvl.dmg=(G.upgLvl.dmg||0)+1; G.tower.dmg++; },
+  },
+  { key:'spd',     tab:'atk', icon:'//',  name:'공격속도',  baseCost:7,  unlock:null,
+    cost()   { return upgCost('spd',7); },
+    stat()   { return (G.tower.atkMs/1000).toFixed(2)+'s'; },
+    canBuy() { return G.gold>=upgCost('spd',7) && G.tower.atkMs>200; },
+    apply()  { var c=upgCost('spd',7); G.gold-=c; G.upgLvl.spd=(G.upgLvl.spd||0)+1; G.tower.atkMs=Math.max(200,G.tower.atkMs-100); },
+  },
+  { key:'rng',     tab:'atk', icon:'(+)',  name:'범위',     baseCost:6,  unlock:null,
+    cost()   { return upgCost('rng',6); },
+    stat()   { return 'Lv.'+G.rangeLevel; },
+    canBuy() { return G.gold>=upgCost('rng',6); },
+    apply()  { var c=upgCost('rng',6); G.gold-=c; G.upgLvl.rng=(G.upgLvl.rng||0)+1; G.tower.range+=30; G.rangeLevel++; G.targetZoom=getTargetZoom(); },
+  },
+  { key:'crit',    tab:'atk', icon:'!',  name:'치명타',   baseCost:8,  unlock:'crit',
+    cost()   { return upgCost('crit',8); },
+    stat()   { return Math.round(G.critChance*100)+'%'; },
+    canBuy() { return G.gold>=upgCost('crit',8); },
+    apply()  { var c=upgCost('crit',8); G.gold-=c; G.upgLvl.crit=(G.upgLvl.crit||0)+1; G.critChance=Math.min(0.9,G.critChance+0.08); },
+  },
+  { key:'multi',   tab:'atk', icon:'+',  name:'다발',     baseCost:10, unlock:'multi',
+    cost()   { return upgCost('multi',10); },
+    stat()   { return G.multiShot+'발'; },
+    canBuy() { return G.gold>=upgCost('multi',10); },
+    apply()  { var c=upgCost('multi',10); G.gold-=c; G.upgLvl.multi=(G.upgLvl.multi||0)+1; G.multiShot++; },
+  },
+  { key:'pierce',  tab:'atk', icon:'>',  name:'관통',     baseCost:10, unlock:'pierce',
+    cost()   { return upgCost('pierce',10); },
+    stat()   { return G.pierce+'관'; },
+    canBuy() { return G.gold>=upgCost('pierce',10); },
+    apply()  { var c=upgCost('pierce',10); G.gold-=c; G.upgLvl.pierce=(G.upgLvl.pierce||0)+1; G.pierce++; },
+  },
+  // ─ 방어 탭 ─
+  { key:'heal',    tab:'def', icon:'+',  name:'회복',     baseCost:8,  unlock:null,
+    cost()   { return upgCost('heal',8); },
+    stat()   { return G.tower.hp+'/'+G.tower.maxHp; },
+    canBuy() { return G.gold>=upgCost('heal',8) && G.tower.hp<G.tower.maxHp; },
+    apply()  { var c=upgCost('heal',8); G.gold-=c; G.upgLvl.heal=(G.upgLvl.heal||0)+1; G.tower.hp=Math.min(G.tower.maxHp,G.tower.hp+Math.ceil(G.tower.maxHp*0.4)); },
+  },
+  { key:'maxhp',   tab:'def', icon:'+',  name:'최대체력',  baseCost:7,  unlock:null,
+    cost()   { return upgCost('maxhp',7); },
+    stat()   { return '최대 '+G.tower.maxHp; },
+    canBuy() { return G.gold>=upgCost('maxhp',7); },
+    apply()  { var c=upgCost('maxhp',7); G.gold-=c; G.upgLvl.maxhp=(G.upgLvl.maxhp||0)+1; G.tower.maxHp+=3; G.tower.hp+=3; },
+  },
+  { key:'armor',   tab:'def', icon:'[]',  name:'방어구',   baseCost:6,  unlock:null,
+    cost()   { return upgCost('armor',6); },
+    stat()   { return G.armor+'중첩'; },
+    canBuy() { return G.gold>=upgCost('armor',6); },
+    apply()  { var c=upgCost('armor',6); G.gold-=c; G.upgLvl.armor=(G.upgLvl.armor||0)+1; G.armor++; },
+  },
+  { key:'vamp',    tab:'def', icon:'*',  name:'흡혈',     baseCost:9,  unlock:'vamp',
+    cost()   { return upgCost('vamp',9); },
+    stat()   { return G.lifeSteal+'/킬'; },
+    canBuy() { return G.gold>=upgCost('vamp',9); },
+    apply()  { var c=upgCost('vamp',9); G.gold-=c; G.upgLvl.vamp=(G.upgLvl.vamp||0)+1; G.lifeSteal++; },
+  },
+  { key:'regen',   tab:'def', icon:'~',  name:'재생',     baseCost:11, unlock:'regen',
+    cost()   { return upgCost('regen',11); },
+    stat()   { return G.regenRate+'/s'; },
+    canBuy() { return G.gold>=upgCost('regen',11); },
+    apply()  { var c=upgCost('regen',11); G.gold-=c; G.upgLvl.regen=(G.upgLvl.regen||0)+1; G.regenRate++; },
+  },
+  // ─ 특수 탭 ─
+  { key:'explode', tab:'spc', icon:'*',  name:'폭발',     baseCost:15, unlock:'explode',
+    cost()   { return upgCost('explode',15); },
+    stat()   { return 'r='+G.explodeR; },
+    canBuy() { return G.gold>=upgCost('explode',15); },
+    apply()  { var c=upgCost('explode',15); G.gold-=c; G.upgLvl.explode=(G.upgLvl.explode||0)+1; G.explodeR+=15; },
+  },
+  { key:'slow',    tab:'spc', icon:'#',  name:'감속',     baseCost:12, unlock:'slow',
+    cost()   { return upgCost('slow',12); },
+    stat()   { return Math.round(G.slowPct*100)+'%'; },
+    canBuy() { return G.gold>=upgCost('slow',12); },
+    apply()  { var c=upgCost('slow',12); G.gold-=c; G.upgLvl.slow=(G.upgLvl.slow||0)+1; G.slowPct=Math.min(0.8,G.slowPct+0.1); },
+  },
+  { key:'gemup',   tab:'spc', icon:'◆',  name:'젬증폭',   baseCost:12, unlock:'gemup',
+    cost()   { return upgCost('gemup',12); },
+    stat()   { return 'x'+G.gemBonus.toFixed(1); },
+    canBuy() { return G.gold>=upgCost('gemup',12); },
+    apply()  { var c=upgCost('gemup',12); G.gold-=c; G.upgLvl.gemup=(G.upgLvl.gemup||0)+1; G.gemBonus=parseFloat((G.gemBonus+0.5).toFixed(1)); },
+  },
+  { key:'goldup',  tab:'spc', icon:'G',  name:'골드증폭',  baseCost:11, unlock:'goldup',
+    cost()   { return upgCost('goldup',11); },
+    stat()   { return 'x'+G.goldBonus.toFixed(1); },
+    canBuy() { return G.gold>=upgCost('goldup',11); },
+    apply()  { var c=upgCost('goldup',11); G.gold-=c; G.upgLvl.goldup=(G.upgLvl.goldup||0)+1; G.goldBonus=parseFloat((G.goldBonus+0.5).toFixed(1)); },
+  },
+];
+
+/* ── 잠금 해제 정의 (상점) ── */
+const UNLOCKS = [
+  { key:'crit',    gems:3, tab:'atk', icon:'!', name:'치명타 해금',    desc:'치명타 확률 업그레이드 해금 (2x 피해)' },
+  { key:'multi',   gems:5, tab:'atk', icon:'+', name:'다발 해금',      desc:'다발 사격 업그레이드 해금' },
+  { key:'pierce',  gems:5, tab:'atk', icon:'>', name:'관통 해금',      desc:'관통 업그레이드 해금' },
+  { key:'vamp',    gems:3, tab:'def', icon:'*', name:'흡혈 해금',      desc:'처치 시 HP 회복 업그레이드 해금' },
+  { key:'regen',   gems:4, tab:'def', icon:'~', name:'재생 해금',      desc:'초당 HP 자동 회복 해금' },
+  { key:'explode', gems:7, tab:'spc', icon:'*', name:'폭발 해금',      desc:'적 처치 시 범위 폭발 해금' },
+  { key:'slow',    gems:4, tab:'spc', icon:'#', name:'감속 해금',      desc:'명중 시 적 감속 해금' },
+  { key:'gemup',   gems:5, tab:'spc', icon:'◆', name:'젬증폭 해금',    desc:'젬 획득량 배율 업그레이드 해금' },
+  { key:'goldup',  gems:4, tab:'spc', icon:'G', name:'골드증폭 해금',  desc:'골드 획득량 배율 업그레이드 해금' },
+];
+
+/* ── 업적 정의 ── */
+const ACHIEVEMENTS = [
+  { key:'wave5',   icon:'~', name:'웨이브 5 달성',    desc:'웨이브 5까지 생존',       cond:()=>PERM.bestWave>=5,   prog:()=>Math.min(PERM.bestWave,5)+'/5',    gems:1 },
+  { key:'wave10',  icon:'~', name:'웨이브 10 달성',   desc:'웨이브 10까지 생존',      cond:()=>PERM.bestWave>=10,  prog:()=>Math.min(PERM.bestWave,10)+'/10',  gems:2 },
+  { key:'wave20',  icon:'★', name:'웨이브 20 달성',   desc:'웨이브 20까지 생존',      cond:()=>PERM.bestWave>=20,  prog:()=>Math.min(PERM.bestWave,20)+'/20',  gems:3 },
+  { key:'wave50',  icon:'★', name:'웨이브 50 달성',   desc:'웨이브 50까지 생존',      cond:()=>PERM.bestWave>=50,  prog:()=>Math.min(PERM.bestWave,50)+'/50',  gems:5 },
+  { key:'kill50',  icon:'/', name:'처치 50',          desc:'적 50마리 처치',          cond:()=>PERM.totalKills>=50,  prog:()=>Math.min(PERM.totalKills,50)+'/50',   gems:1 },
+  { key:'kill200', icon:'/', name:'처치 200',         desc:'적 200마리 처치',         cond:()=>PERM.totalKills>=200, prog:()=>Math.min(PERM.totalKills,200)+'/200', gems:2 },
+  { key:'kill500', icon:'X', name:'처치 500',         desc:'적 500마리 처치',         cond:()=>PERM.totalKills>=500, prog:()=>Math.min(PERM.totalKills,500)+'/500', gems:3 },
+  { key:'boss10',  icon:'★', name:'보스 처치 10',     desc:'보스 10마리 처치',        cond:()=>PERM.bossKills>=10,   prog:()=>Math.min(PERM.bossKills,10)+'/10',   gems:2 },
+  { key:'upg30',   icon:'◈', name:'업그레이드 30회',  desc:'인게임 업그레이드 30회',  cond:()=>PERM.upgradeCount>=30,prog:()=>Math.min(PERM.upgradeCount,30)+'/30', gems:2 },
+];
+
+function checkAchievements() {
+  let changed = false;
+  for (const ach of ACHIEVEMENTS) {
+    if (!PERM.achievements[ach.key] && ach.cond()) {
+      PERM.achievements[ach.key] = 'claimed';
+      PERM.gems += ach.gems;
+      if (G) G.gems = PERM.gems;
+      changed = true;
+      try { showAchievementToast(ach.name); } catch(e) {}
+    }
+  }
+  if (changed) savePerm();
+}
+
+function resizeCanvas() {
+  const aw = areaEl.clientWidth  || window.innerWidth;
+  const ah = areaEl.clientHeight || Math.floor(window.innerHeight * 0.75);
+  let w, h;
+  if (aw / ah < 9 / 16) {
+    w = aw;
+    h = Math.floor(aw * 16 / 9);
+  } else {
+    h = ah;
+    w = Math.floor(ah * 9 / 16);
+  }
+  CW = w; CH = h;
+  canvas.width  = w;
+  canvas.height = h;
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  if (G) {
+    G.cx = w / 2;
+    G.cy = h / 2;
+    G.tower.range = Math.min(w, h) * 0.45;
+  }
+}
+window.addEventListener('resize', resizeCanvas, false);
+
+/* ═══════════════════════════════════════════════════════════════
+   GAME STATE
+═══════════════════════════════════════════════════════════════ */
+let G        = null;
+let loopGen  = 0;
+let gameSpeed = 1;
+let _pauseBtnRect = { x: 0, y: 0, w: 28, h: 28 };
+let _confirmCb    = null;
+
+function createState() {
+  return {
+    wave:         1,
+    gold:         0,   // set from PERM in startGame
+    gems:         0,   // set from PERM in startGame
+    phase:        'playing', // 'playing' | 'between' | 'gameover'
+    betweenTimer: 0,
+    killCount:    0,   // enemies killed this run
+    goldEarned:   0,   // gold earned this run
+    upgLvl:       {},  // in-game upgrade purchase counts
+
+    tower: {
+      hp:      10,
+      maxHp:   10,
+      dmg:     3,
+      atkMs:   1000,  // ms between shots
+      range:   0,
+      lastAtk: 0,
+      buffMs:  0,     // ms remaining for 2× damage buff
+    },
+
+    // Zoom
+    rangeLevel:  0,
+    zoom:        1.0,
+    targetZoom:  1.0,
+    flashAlpha:  0,
+
+    // Spawn
+    spawnQ:       [],      // array of type strings
+    spawnIdx:     0,       // current index in spawnQ
+    spawnTimer:   0,
+    spawnIntvl:   800,
+    isBossWave:   false,
+    bossSpawned:  false,
+    sniperBullets: [],
+    bossWarningTimer: -1,
+
+    // Entities
+    enemies: [],
+    bullets: [],
+    effects: [],
+    floatTexts: [],
+    deathParticles: [],
+
+    // New mechanics (all temp, reset each run)
+    critChance: 0,
+    multiShot:  1,
+    pierce:     0,
+    armor:      0,
+    lifeSteal:  0,
+    regenRate:  0,
+    regenTimer: 0,
+    slowPct:    0,
+    explodeR:   0,
+    gemBonus:   1.0,
+    goldBonus:  1.0,
+
+    // Wave banner (canvas-rendered)
+    bannerClear: '',
+    bannerNext:  '',
+    bannerTimer: -1, // -1 = inactive; ≥0 = ms elapsed
+    waveBonusText:  '',
+    waveBonusTimer: -1,
+
+    speed:          1,
+    showTowerStats: false,
+
+    cx: CW / 2,
+    cy: CH / 2,
+    lastTime: 0,
+  };
+}
+
+function getTargetZoom() {
+  const lvl = G.rangeLevel;
+  if (lvl <= 5)  return 1.00;
+  if (lvl <= 10) return 0.85;
+  if (lvl <= 15) return 0.70;
+  if (lvl <= 20) return 0.55;
+  return 0.40;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GAME INIT / WAVE START
+═══════════════════════════════════════════════════════════════ */
+function applyPermStats() {
+  const t  = G.tower;
+  const ws = PERM.ws || {};
+  t.dmg        = 3 + PERM.dmgLv + (ws.damage    || 0);
+  t.atkMs      = Math.max(200, 1000 - PERM.spdLv * 40 - (ws.atkspd || 0) * 20);
+  t.maxHp      = 10 + PERM.hpLv * 2 + (ws.maxHp || 0) * 5;
+  t.hp         = t.maxHp;
+  t.range      = Math.min(CW, CH) * 0.45 + PERM.rngLv * 30;
+  t.critChance = (ws.critChance || 0) * 0.05;
+  t.critMult   = 1.5 + (ws.critMult   || 0) * 0.25;
+  t.defense    = (ws.defense    || 0) * 0.01;
+  t.hpRegen    = (ws.hpRegen    || 0) * 0.5;
+  G.goldMult   = 1 + (ws.goldGain || 0) * 0.1;
+  G.gemMult    = 1 + (ws.gemGain  || 0) * 0.1;
+  G.rangeLevel = 5 + PERM.rngLv;
+  G.zoom       = getTargetZoom();
+  G.targetZoom = G.zoom;
+}
+
+function startGame() {
+  G = createState();
+  G.gold  = PERM.gold;
+  G.gems  = PERM.gems;
+  G.speed = gameSpeed;
+  const _sb = document.getElementById('speed-btn');
+  if (_sb) _sb.textContent = G.speed + '×';
+  applyPermStats();
+  buildCards();
+  setActiveTab(activeTab);
+  applyPendingHighlight();
+
+  // Daily gem
+  try {
+    const today = new Date().toDateString();
+    if (localStorage.getItem('td_day') !== today) {
+      G.gems += 1;
+      PERM.gems += 1;
+      localStorage.setItem('td_day', today);
+      savePerm();
+    }
+  } catch (_) {}
+
+  G.initialGems = G.gems;
+  G.initialBossKills = PERM.bossKills;
+  startWave();
+  loopGen++;
+  const gen = loopGen;
+  G.lastTime = performance.now();
+  requestAnimationFrame(function(ts) { gameLoop(gen, ts); });
+}
+
+function getWaveEnemies(wave) {
+  var list = [];
+  var basicCount = 3 + wave * 2;
+  for (var i = 0; i < basicCount; i++) list.push('basic');
+  if (wave >= 3) {
+    var tankCount = Math.floor(wave / 3);
+    for (var i = 0; i < tankCount; i++) list.push('tank');
+  }
+  if (wave >= 5) {
+    var rusherCount = Math.floor(wave / 2);
+    for (var i = 0; i < rusherCount; i++) list.push('rusher');
+  }
+  if (wave >= 8) {
+    var sniperCount = Math.floor(wave / 4);
+    for (var i = 0; i < sniperCount; i++) list.push('sniper');
+  }
+  // Shuffle non-boss
+  for (var j = list.length - 1; j > 0; j--) {
+    var k = Math.floor(Math.random() * (j + 1));
+    var tmp = list[j]; list[j] = list[k]; list[k] = tmp;
+  }
+  if (wave % 5 === 0) list.push('boss'); // boss always last
+  return list;
+}
+
+function startWave() {
+  const w = G.wave;
+  G.isBossWave  = (w % 5 === 0);
+  G.bossSpawned = false;
+  G.spawnQ      = getWaveEnemies(w);
+  G.spawnIdx    = 0;
+  G.spawnIntvl  = 800;  // fixed 0.8s between spawns
+  G.spawnTimer  = G.spawnIntvl;
+  G.phase       = 'playing';
+  // Wave start gold bonus
+  var bonus = w * 2;
+  G.gold += bonus;
+  G.goldEarned += bonus;
+  G.waveBonusText = '+' + bonus + '골드 웨이브 보너스';
+  G.waveBonusTimer = 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GAME LOOP
+═══════════════════════════════════════════════════════════════ */
+function gameLoop(gen, ts) {
+  if (gen !== loopGen) return;
+  const rawDt = Math.min(ts - G.lastTime, 50);
+  G.lastTime = ts;
+  const steps = (G.speed > 1 && G.phase === 'playing') ? G.speed : 1;
+  for (let i = 0; i < steps; i++) update(rawDt);
+  render();
+  if (G.phase !== 'gameover') {
+    requestAnimationFrame(function(nts) { gameLoop(gen, nts); });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UPDATE
+═══════════════════════════════════════════════════════════════ */
+function update(dt) {
+  if (G.phase === 'gameover' || G.phase === 'paused') return;
+
+  // Zoom smooth transition (~0.3s time constant)
+  if (G.zoom !== G.targetZoom) {
+    const lf = 1 - Math.exp(-dt / 80);
+    G.zoom += (G.targetZoom - G.zoom) * lf;
+    if (Math.abs(G.zoom - G.targetZoom) < 0.001) G.zoom = G.targetZoom;
+  }
+
+  // Tower hit flash decay
+  if (G.flashAlpha > 0) {
+    G.flashAlpha = Math.max(0, G.flashAlpha - dt / 200);
+  }
+
+
+  // Buff countdown
+  if (G.tower.buffMs > 0) G.tower.buffMs = Math.max(0, G.tower.buffMs - dt);
+
+  // Regen
+  if (G.regenRate > 0) {
+    G.regenTimer += dt;
+    if (G.regenTimer >= 1000) {
+      G.regenTimer -= 1000;
+      G.tower.hp = Math.min(G.tower.maxHp, G.tower.hp + G.regenRate);
+    }
+  }
+
+  // Animate leftover effects even during between phase
+  for (let i = G.effects.length - 1; i >= 0; i--) {
+    G.effects[i].t += dt;
+    if (G.effects[i].t >= 600) G.effects.splice(i, 1);
+  }
+
+  // Float texts (gold pickup)
+  for (let i = G.floatTexts.length - 1; i >= 0; i--) {
+    G.floatTexts[i].timer += dt;
+    if (G.floatTexts[i].timer > 500) G.floatTexts.splice(i, 1);
+  }
+
+  // Death particles
+  for (let i = G.deathParticles.length - 1; i >= 0; i--) {
+    const p = G.deathParticles[i];
+    p.timer += dt;
+    p.x += p.vx * (dt / 1000);
+    p.y += p.vy * (dt / 1000);
+    if (p.timer > 300) G.deathParticles.splice(i, 1);
+  }
+
+  // Wave banner timer
+  if (G.bannerTimer >= 0) G.bannerTimer += dt;
+  if (G.waveBonusTimer >= 0) G.waveBonusTimer += dt;
+  if (G.bossWarningTimer >= 0) G.bossWarningTimer += dt;
+
+  // ── Between-wave countdown ──
+  if (G.phase === 'between') {
+    G.betweenTimer -= dt;
+    if (G.betweenTimer <= 0) {
+      G.wave++;
+      startWave();
+    }
+    return;
+  }
+
+  // ── Spawn enemies ──
+  if (G.spawnIdx < G.spawnQ.length) {
+    G.spawnTimer -= dt;
+    if (G.spawnTimer <= 0) {
+      var etype = G.spawnQ[G.spawnIdx];
+      G.enemies.push(mkEnemy(etype));
+      if (etype === 'boss') {
+        G.bossSpawned = true;
+        G.bossWarningTimer = 0;
+        AudioManager.playSfx('boss');
+      }
+      G.spawnIdx++;
+      G.spawnTimer = G.spawnIntvl;
+    }
+  }
+
+  // ── Tower fires ──
+  G.tower.lastAtk += dt;
+  if (G.tower.lastAtk >= G.tower.atkMs) {
+    G.tower.lastAtk -= G.tower.atkMs;
+    fireTower();
+  }
+
+  // ── Move bullets ──
+  const bSpd = Math.min(CW, CH) * 0.022; // px per frame @60fps
+  for (let i = G.bullets.length - 1; i >= 0; i--) {
+    const b = G.bullets[i];
+    const mv = bSpd * (dt / 16.667);
+    b.x += b.dx * mv;
+    b.y += b.dy * mv;
+
+    if (b.x < -80 || b.x > CW + 80 || b.y < -80 || b.y > CH + 80) {
+      G.bullets.splice(i, 1);
+      continue;
+    }
+
+    let removeBullet = false;
+    for (let j = G.enemies.length - 1; j >= 0; j--) {
+      const e = G.enemies[j];
+      if (b.hitSet && b.hitSet.has(e)) continue; // already hit by this piercing bullet
+      const ddx = b.x - e.x, ddy = b.y - e.y;
+      if (ddx * ddx + ddy * ddy < (e.r + 5) * (e.r + 5)) {
+        if (b.hitSet) b.hitSet.add(e);
+        let dmg = G.tower.buffMs > 0 ? G.tower.dmg * 2 : G.tower.dmg;
+        if (b.crit) dmg *= 2;
+        // Slow on hit
+        if (G.slowPct > 0) e.slowTimer = 1500;
+        e.hp -= dmg;
+
+        if (e.hp <= 0) {
+          AudioManager.playSfx('hit');
+          const gEarned  = Math.floor(e.gold * G.goldBonus);
+          const gmEarned = e.gem ? Math.floor(e.gem * G.gemBonus) : 0;
+          G.gold       += gEarned;
+          G.gems       += gmEarned;
+          G.killCount++;
+          G.goldEarned += gEarned;
+          PERM.totalKills++;
+          if (e.boss) PERM.bossKills++;
+          // Float text & death particles
+          if (gEarned > 0) G.floatTexts.push({ x: e.x, y: e.y, text: '+' + gEarned, timer: 0 });
+          for (let dp = 0; dp < 4; dp++) {
+            const da = Math.PI / 2 * dp + Math.PI / 4;
+            G.deathParticles.push({ x: e.x, y: e.y, vx: Math.cos(da) * 40, vy: Math.sin(da) * 40, timer: 0 });
+          }
+          // Life steal
+          if (G.lifeSteal > 0) {
+            G.tower.hp = Math.min(G.tower.maxHp, G.tower.hp + G.lifeSteal);
+          }
+          // Explosion AOE
+          if (G.explodeR > 0) {
+            const ex = e.x, ey = e.y;
+            const exDmg = Math.max(1, Math.floor(G.tower.dmg * 0.5));
+            addFx(ex, ey, G.explodeR, '#f97316');
+            for (let k = G.enemies.length - 1; k >= 0; k--) {
+              const ek = G.enemies[k];
+              if (ek === e) continue;
+              const edx = ek.x - ex, edy = ek.y - ey;
+              if (edx * edx + edy * edy < G.explodeR * G.explodeR) {
+                ek.hp -= exDmg;
+                if (ek.hp <= 0) {
+                  const ekGold = Math.floor(ek.gold * G.goldBonus);
+                  G.gold       += ekGold;
+                  G.killCount++;
+                  G.goldEarned += ekGold;
+                  PERM.totalKills++;
+                  if (ek.boss) PERM.bossKills++;
+                  if (ekGold > 0) G.floatTexts.push({ x: ek.x, y: ek.y, text: '+' + ekGold, timer: 0 });
+                  for (let dp2 = 0; dp2 < 4; dp2++) {
+                    const da2 = Math.PI / 2 * dp2 + Math.PI / 4;
+                    G.deathParticles.push({ x: ek.x, y: ek.y, vx: Math.cos(da2) * 40, vy: Math.sin(da2) * 40, timer: 0 });
+                  }
+                  addFx(ek.x, ek.y, ek.r * 2.8, '#f97316');
+                  G.enemies.splice(k, 1);
+
+                  if (k <= j) j--;
+                }
+              }
+            }
+          } else {
+            addFx(e.x, e.y, e.r * 2.8, e.boss ? '#f97316' : '#ef4444');
+          }
+          G.enemies.splice(j, 1);
+        }
+
+        // Pierce: bullet keeps going if pierceLeft > 0
+        if (b.pierceLeft > 0) {
+          b.pierceLeft--;
+        } else {
+          removeBullet = true;
+          break;
+        }
+      }
+    }
+    if (removeBullet) G.bullets.splice(i, 1);
+  }
+
+  // ── Move enemies toward tower ──
+  const TOWER_HIT_R = 18;
+  for (let i = G.enemies.length - 1; i >= 0; i--) {
+    const e = G.enemies[i];
+    const dx = G.cx - e.x, dy = G.cy - e.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist < TOWER_HIT_R + e.r) {
+      const dmgTaken = Math.max(1, Math.round(1 - G.armor * 0.05));
+      G.tower.hp = Math.max(0, G.tower.hp - dmgTaken);
+      G.flashAlpha = 1;
+      addFx(e.x, e.y, e.r * 2, '#f87171');
+      G.enemies.splice(i, 1);
+      if (G.tower.hp <= 0) { triggerGameOver(); return; }
+      continue;
+    }
+
+    // Slow tick
+    if (e.slowTimer > 0) e.slowTimer = Math.max(0, e.slowTimer - dt);
+    const spdMult = (e.slowTimer > 0) ? (1 - G.slowPct) : 1;
+    const mv = e.spd * spdMult * (dt / 16.667);
+    e.x += (dx / dist) * mv;
+    e.y += (dy / dist) * mv;
+
+    // Boss enrage at 50% HP
+    if (e.type === 'boss' && !e.enraged && e.hp <= e.maxHp * 0.5) {
+      e.enraged = true;
+      e.spd *= 1.2;
+    }
+  }
+
+  // ── Sniper ranged attacks ──
+  for (var si = 0; si < G.enemies.length; si++) {
+    var se = G.enemies[si];
+    if (se.type !== 'sniper') continue;
+    se.atkTimer += dt;
+    var sdx = G.cx - se.x, sdy = G.cy - se.y;
+    var sDist = Math.sqrt(sdx * sdx + sdy * sdy);
+    if (sDist < G.tower.range + 50 && se.atkTimer >= 2000) {
+      se.atkTimer = 0;
+      G.sniperBullets.push({
+        x: se.x, y: se.y,
+        dx: sdx / sDist, dy: sdy / sDist,
+        dmg: 0.5,
+      });
+    }
+  }
+  // Update sniper bullets
+  for (var sbi = G.sniperBullets.length - 1; sbi >= 0; sbi--) {
+    var sb = G.sniperBullets[sbi];
+    sb.x += sb.dx * 2.5 * (dt / 16.667);
+    sb.y += sb.dy * 2.5 * (dt / 16.667);
+    var sbdx = sb.x - G.cx, sbdy = sb.y - G.cy;
+    if (sbdx * sbdx + sbdy * sbdy < 18 * 18) {
+      G.tower.hp = Math.max(0, G.tower.hp - sb.dmg);
+      G.flashAlpha = 1;
+      G.sniperBullets.splice(sbi, 1);
+      if (G.tower.hp <= 0) { triggerGameOver(); return; }
+    } else if (sb.x < -50 || sb.x > CW + 50 || sb.y < -50 || sb.y > CH + 50) {
+      G.sniperBullets.splice(sbi, 1);
+    }
+  }
+
+  // ── Check wave complete ──
+  const spawnDone = G.spawnIdx >= G.spawnQ.length;
+  if (spawnDone && G.enemies.length === 0 && G.phase === 'playing') {
+    onWaveComplete();
+  }
+
+  syncUI();
+}
+
+function mkEnemy(etype) {
+  var zoom  = G.zoom;
+  var halfW = CW / (2 * zoom);
+  var halfH = CH / (2 * zoom);
+  var m     = 50;
+  var x, y;
+  var side = (Math.random() * 4) | 0;
+  if (side === 0) {
+    x = CW/2 + (Math.random() - 0.5) * 2 * (halfW + m);
+    y = CH/2 - halfH - m;
+  } else if (side === 1) {
+    x = CW/2 + (Math.random() - 0.5) * 2 * (halfW + m);
+    y = CH/2 + halfH + m;
+  } else if (side === 2) {
+    x = CW/2 - halfW - m;
+    y = CH/2 + (Math.random() - 0.5) * 2 * (halfH + m);
+  } else {
+    x = CW/2 + halfW + m;
+    y = CH/2 + (Math.random() - 0.5) * 2 * (halfH + m);
+  }
+
+  var w = G.wave;
+  var baseHp  = 2 * Math.pow(1.15, w - 1);
+  var baseSpd = 0.81 * Math.pow(1.03, w - 1);
+  var baseR   = 9;
+  var baseGold = Math.floor(1 * (1 + w * 0.1));
+
+  var hp, spd, r, gold, gem = 0;
+
+  if (etype === 'boss') {
+    hp   = w * 20;
+    spd  = baseSpd * 0.7;
+    r    = Math.round(baseR * 2.5);
+    gold = w * 2;
+    gem  = 1;
+  } else if (etype === 'tank') {
+    hp   = baseHp * 4;
+    spd  = baseSpd * 0.5;
+    r    = Math.round(baseR * 1.6);
+    gold = baseGold * 3;
+  } else if (etype === 'rusher') {
+    hp   = baseHp * 0.5;
+    spd  = baseSpd * 2.5;
+    r    = Math.round(baseR * 0.7);
+    gold = baseGold * 2;
+  } else if (etype === 'sniper') {
+    hp   = baseHp * 0.8;
+    spd  = baseSpd * 0.8;
+    r    = baseR;
+    gold = baseGold * 4;
+  } else {
+    // basic
+    hp   = baseHp;
+    spd  = baseSpd;
+    r    = baseR;
+    gold = baseGold;
+  }
+
+  return {
+    x: x, y: y,
+    type:      etype,
+    boss:      etype === 'boss',
+    hp:        hp,
+    maxHp:     hp,
+    r:         r,
+    spd:       spd,
+    gold:      gold,
+    gem:       gem,
+    slowTimer: 0,
+    atkTimer:  0,   // for sniper attacks
+    enraged:   false, // for boss enrage
+  };
+}
+
+function fireTower() {
+  let target = null, minD = G.tower.range + 1;
+  for (const e of G.enemies) {
+    const dx = e.x - G.cx, dy = e.y - G.cy;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < minD) { minD = d; target = e; }
+  }
+  if (!target) return;
+  const baseAngle = Math.atan2(target.y - G.cy, target.x - G.cx);
+  const shots     = Math.max(1, G.multiShot);
+  const spread    = 0.18; // radians between bullets
+  for (let s = 0; s < shots; s++) {
+    const offset = (s - (shots - 1) / 2) * spread;
+    const angle  = baseAngle + offset;
+    const isCrit = G.critChance > 0 && Math.random() < G.critChance;
+    G.bullets.push({
+      x: G.cx, y: G.cy,
+      dx: Math.cos(angle), dy: Math.sin(angle),
+      crit: isCrit,
+      pierceLeft: G.pierce,
+      hitSet: G.pierce > 0 ? new Set() : null,
+    });
+  }
+  AudioManager.playSfx('shoot');
+}
+
+function addFx(x, y, maxR, color) {
+  G.effects.push({ x, y, maxR, color, t: 0 });
+}
+
+function onWaveComplete() {
+  AudioManager.playSfx('wave_clear');
+  G.phase = 'between';
+  G.betweenTimer = 2500;
+  if (G.wave % 10 === 0) G.gems += 2;
+  if (G.wave > PERM.bestWave) { PERM.bestWave = G.wave; savePerm(); }
+  checkAchievements();
+  const nextW    = G.wave + 1;
+  const nextBoss = nextW % 5 === 0;
+  G.bannerClear = 'WAVE ' + String(G.wave).padStart(2, '0') + ' CLEAR';
+  G.bannerNext  = 'WAVE ' + String(nextW).padStart(2, '0') + (nextBoss ? '  BOSS' : '');
+  G.bannerTimer = 0;
+}
+
+function triggerGameOver() {
+  loopGen++;           // stop game loop immediately
+  G.phase = 'gameover';
+  AudioManager.playSfx('game_over');
+
+  // Gems earned this run & boss check
+  var gemsEarned = G.gems - (G.initialGems || 0);
+  var bossKilledThisRun = PERM.bossKills > (G.initialBossKills || 0);
+
+  // Update & save persistent data
+  if (G.wave > PERM.bestWave) PERM.bestWave = G.wave;
+  PERM.gold = G.gold;
+  PERM.gems = G.gems;
+  savePerm();
+
+  // Detect newly earned achievements (before claiming)
+  var newAchs = [];
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+    var ach = ACHIEVEMENTS[i];
+    if (!PERM.achievements[ach.key] && ach.cond()) newAchs.push(ach);
+  }
+  checkAchievements(); // claim & award gems
+
+  // Populate results
+  document.getElementById('r-wave').textContent  = G.wave;
+  document.getElementById('r-kills').textContent = G.killCount;
+  document.getElementById('r-best').textContent  = PERM.bestWave;
+  document.getElementById('r-gold').textContent  = G.goldEarned;
+
+  // Gem row — only visible when boss was killed
+  var gemRow = document.getElementById('r-gem-row');
+  if (bossKilledThisRun && gemsEarned > 0) {
+    document.getElementById('r-gems').textContent = gemsEarned;
+    gemRow.style.display = '';
+  } else {
+    gemRow.style.display = 'none';
+  }
+
+  // Achievement rewards
+  var achRow = document.getElementById('r-ach-row');
+  if (newAchs.length > 0) {
+    achRow.innerHTML = newAchs.map(function(a) {
+      return '★ ' + a.name + ' (+' + a.gems + '◆)';
+    }).join('<br>');
+    achRow.style.display = '';
+  } else {
+    achRow.style.display = 'none';
+  }
+
+  // Nav unlock notification
+  checkNavUnlocks();
+  var unlockRow = document.getElementById('r-unlock-row');
+  var newUnlocks = getNewUnlocks();
+  if (newUnlocks.length > 0) {
+    unlockRow.innerHTML = newUnlocks.map(function(l) { return '■ [' + l + '] 해금됨!'; }).join('<br>');
+    unlockRow.style.display = '';
+  } else {
+    unlockRow.style.display = 'none';
+  }
+
+  document.getElementById('results-screen').classList.add('show');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════════════ */
+function render() {
+  // ── 1. Background (full canvas, before zoom) ──────────────────
+  ctx.fillStyle = '#030b10';
+  ctx.fillRect(0, 0, CW, CH);
+
+  // ── 2. Game world (zoom transform applied) ────────────────────
+  ctx.save();
+  ctx.translate(CW / 2, CH / 2);
+  ctx.scale(G.zoom, G.zoom);
+  ctx.translate(-CW / 2, -CH / 2);
+
+  // Visible game-coord bounds when zoomed out
+  const visW = CW / G.zoom;
+  const visH = CH / G.zoom;
+  const ox   = (CW - visW) / 2; // negative when zoomed out
+  const oy   = (CH - visH) / 2;
+
+  // Grid (extended to fill visible area)
+  ctx.strokeStyle = 'rgba(0,255,255,0.03)';
+  ctx.lineWidth = 0.5;
+  const gs = 40;
+  for (let x = Math.floor(ox / gs) * gs; x <= ox + visW + gs; x += gs) {
+    ctx.beginPath(); ctx.moveTo(x, oy); ctx.lineTo(x, oy + visH); ctx.stroke();
+  }
+  for (let y = Math.floor(oy / gs) * gs; y <= oy + visH + gs; y += gs) {
+    ctx.beginPath(); ctx.moveTo(ox, y); ctx.lineTo(ox + visW, y); ctx.stroke();
+  }
+
+  // Attack range circle
+  ctx.beginPath();
+  ctx.arc(G.cx, G.cy, G.tower.range, 0, Math.PI * 2);
+  ctx.setLineDash([6, 6]);
+  ctx.strokeStyle = 'rgba(0,255,255,0.10)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Targeting line to nearest in-range enemy
+  {
+    let nearest = null, nd = G.tower.range + 1;
+    for (const e of G.enemies) {
+      const dx = e.x - G.cx, dy = e.y - G.cy;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < nd) { nd = d; nearest = e; }
+    }
+    if (nearest) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(251,191,36,0.22)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath();
+      ctx.moveTo(G.cx, G.cy);
+      ctx.lineTo(nearest.x, nearest.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+  }
+
+  // Effects (death rings)
+  for (const ef of G.effects) {
+    const t = ef.t / 600;
+    ctx.save();
+    ctx.globalAlpha = (1 - t) * 0.85;
+    ctx.beginPath();
+    ctx.arc(ef.x, ef.y, ef.maxR * t, 0, Math.PI * 2);
+    ctx.strokeStyle = ef.color;
+    ctx.lineWidth = Math.max(0.5, 3 - t * 2.5);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Enemies (type-specific shapes)
+  for (const e of G.enemies) {
+    const slowed = e.slowTimer > 0;
+    ctx.save();
+    ctx.translate(e.x, e.y);
+
+    if (e.type === 'boss') {
+      // Octagon
+      var bossColor = (e.enraged) ? '#ffbb33' : '#ff9900';
+      var bossStroke = (e.enraged) ? '#ffdd44' : '#ffcc00';
+      if (slowed) { bossColor = '#1e3a8a'; bossStroke = '#93c5fd'; }
+      ctx.beginPath();
+      for (var oi = 0; oi < 8; oi++) {
+        var oa = (Math.PI * 2 / 8) * oi - Math.PI / 8;
+        var opx = Math.cos(oa) * e.r, opy = Math.sin(oa) * e.r;
+        if (oi === 0) ctx.moveTo(opx, opy); else ctx.lineTo(opx, opy);
+      }
+      ctx.closePath();
+      ctx.fillStyle = bossColor;
+      ctx.fill();
+      ctx.strokeStyle = bossStroke;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold ' + Math.floor(e.r * 0.5) + 'px "Courier New", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('BOSS', 0, 0);
+    } else if (e.type === 'tank') {
+      // Hexagon
+      var tankColor = slowed ? '#1e3a8a' : '#ff6600';
+      var tankStroke = slowed ? '#93c5fd' : '#ff8833';
+      ctx.beginPath();
+      for (var hi = 0; hi < 6; hi++) {
+        var ha = (Math.PI * 2 / 6) * hi - Math.PI / 6;
+        var hx = Math.cos(ha) * e.r, hy = Math.sin(ha) * e.r;
+        if (hi === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+      }
+      ctx.closePath();
+      ctx.fillStyle = tankColor;
+      ctx.fill();
+      ctx.strokeStyle = tankStroke;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    } else if (e.type === 'rusher') {
+      // Triangle pointing toward tower
+      var rdx = G.cx - e.x, rdy = G.cy - e.y;
+      var ra = Math.atan2(rdy, rdx);
+      ctx.rotate(ra);
+      var rl = e.r * 1.8, rw = e.r * 0.7;
+      var rushColor = slowed ? '#1d4ed8' : '#ff0055';
+      var rushStroke = slowed ? '#93c5fd' : '#ff3377';
+      ctx.beginPath();
+      ctx.moveTo(rl / 2, 0);
+      ctx.lineTo(-rl / 2, -rw);
+      ctx.lineTo(-rl / 2, rw);
+      ctx.closePath();
+      ctx.fillStyle = rushColor;
+      ctx.fill();
+      ctx.strokeStyle = rushStroke;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.rotate(-ra);
+      // Trail effect
+      ctx.globalAlpha = 0.2;
+      ctx.rotate(ra);
+      ctx.fillStyle = rushColor;
+      ctx.fillRect(-rl / 2 - 6, -rw * 0.5, 6, rw);
+      ctx.rotate(-ra);
+      ctx.globalAlpha = 1;
+    } else if (e.type === 'sniper') {
+      // Elongated diamond
+      var snpColor = slowed ? '#1d4ed8' : '#aa00ff';
+      var snpStroke = slowed ? '#93c5fd' : '#cc44ff';
+      ctx.beginPath();
+      ctx.moveTo(0, -e.r * 1.4);
+      ctx.lineTo(e.r * 0.6, 0);
+      ctx.lineTo(0, e.r * 1.4);
+      ctx.lineTo(-e.r * 0.6, 0);
+      ctx.closePath();
+      ctx.fillStyle = snpColor;
+      ctx.fill();
+      ctx.strokeStyle = snpStroke;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    } else {
+      // Basic - diamond
+      ctx.rotate(Math.PI / 4);
+      var sz = e.r * 1.3;
+      ctx.fillStyle = slowed ? '#1d4ed8' : '#ef4444';
+      ctx.fillRect(-sz / 2, -sz / 2, sz, sz);
+      ctx.strokeStyle = slowed ? '#93c5fd' : '#ff6666';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(-sz / 2, -sz / 2, sz, sz);
+      ctx.rotate(-Math.PI / 4);
+    }
+
+    // Health bar (color by type)
+    var hbColors = { basic: '#ef4444', tank: '#ff6600', rusher: '#ff0055', sniper: '#aa00ff', boss: '#ffcc00' };
+    var bw = e.r * 2.6, bh = (e.type === 'tank') ? 3 : 2;
+    var bx = -bw / 2, by = -e.r - bh - 4;
+    var hr = e.hp / e.maxHp;
+    ctx.fillStyle = '#1a0005';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.fillStyle = hbColors[e.type] || '#ef4444';
+    ctx.fillRect(bx, by, bw * hr, bh);
+
+    ctx.restore();
+  }
+
+  // Bullets (laser lines)
+  for (const b of G.bullets) {
+    const angle = Math.atan2(b.dy, b.dx);
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(angle);
+    // Trail
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = b.crit ? '#ff6600' : '#00ffff';
+    ctx.fillRect(-12, -1, 4, 2);
+    // Main bullet line
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = b.crit ? '#ff6600' : '#00ffff';
+    ctx.fillRect(-4, -1, 8, 2);
+    ctx.restore();
+  }
+
+  // Sniper bullets (purple)
+  for (var sbi = 0; sbi < G.sniperBullets.length; sbi++) {
+    var sb = G.sniperBullets[sbi];
+    var sba = Math.atan2(sb.dy, sb.dx);
+    ctx.save();
+    ctx.translate(sb.x, sb.y);
+    ctx.rotate(sba);
+    ctx.fillStyle = '#aa00ff';
+    ctx.fillRect(-5, -1.5, 10, 3);
+    ctx.globalAlpha = 0.3;
+    ctx.fillRect(-11, -1, 6, 2);
+    ctx.restore();
+  }
+
+  // Tower (hexagon)
+  {
+    const TR = 20;
+    const buffed = G.tower.buffMs > 0;
+    const flashHit = G.flashAlpha > 0;
+    ctx.save();
+    // Hexagon path
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = Math.PI / 3 * i - Math.PI / 6;
+      const hx = G.cx + TR * Math.cos(a);
+      const hy = G.cy + TR * Math.sin(a);
+      if (i === 0) ctx.moveTo(hx, hy); else ctx.lineTo(hx, hy);
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#001a22';
+    ctx.fill();
+    ctx.strokeStyle = flashHit ? '#ef4444' : (buffed ? '#f97316' : '#00ffff');
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Crosshair
+    ctx.strokeStyle = 'rgba(0,255,255,0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(G.cx, G.cy - 8); ctx.lineTo(G.cx, G.cy + 8);
+    ctx.moveTo(G.cx - 8, G.cy); ctx.lineTo(G.cx + 8, G.cy);
+    ctx.stroke();
+    // Corner brackets (4 corners of bounding box)
+    const bk = 6;
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    // Top-left
+    ctx.moveTo(G.cx - TR, G.cy - TR); ctx.lineTo(G.cx - TR + bk, G.cy - TR);
+    ctx.moveTo(G.cx - TR, G.cy - TR); ctx.lineTo(G.cx - TR, G.cy - TR + bk);
+    // Top-right
+    ctx.moveTo(G.cx + TR, G.cy - TR); ctx.lineTo(G.cx + TR - bk, G.cy - TR);
+    ctx.moveTo(G.cx + TR, G.cy - TR); ctx.lineTo(G.cx + TR, G.cy - TR + bk);
+    // Bottom-left
+    ctx.moveTo(G.cx - TR, G.cy + TR); ctx.lineTo(G.cx - TR + bk, G.cy + TR);
+    ctx.moveTo(G.cx - TR, G.cy + TR); ctx.lineTo(G.cx - TR, G.cy + TR - bk);
+    // Bottom-right
+    ctx.moveTo(G.cx + TR, G.cy + TR); ctx.lineTo(G.cx + TR - bk, G.cy + TR);
+    ctx.moveTo(G.cx + TR, G.cy + TR); ctx.lineTo(G.cx + TR, G.cy + TR - bk);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Death particles
+  for (const dp of G.deathParticles) {
+    const dpAlpha = 1 - dp.timer / 300;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, dpAlpha);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(dp.x - 1.5, dp.y - 1.5, 3, 3);
+    ctx.restore();
+  }
+
+  // Float texts (gold pickup)
+  for (const ft of G.floatTexts) {
+    const ftAlpha = 1 - ft.timer / 500;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, ftAlpha);
+    ctx.font = '10px "Courier New", monospace';
+    ctx.fillStyle = '#f59e0b';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ft.text, ft.x, ft.y - ft.timer * 0.04);
+    ctx.restore();
+  }
+
+  ctx.restore(); // ← end zoom transform
+
+  // ── 3. Wave clear banner (canvas text, no zoom) ───────────────
+  if (G.bannerTimer >= 0 && G.bannerTimer < 1900) {
+    const t = G.bannerTimer;
+    let text, alpha;
+    if (t < 800) {
+      text = G.bannerClear; alpha = 1;
+    } else if (t < 1300) {
+      text = G.bannerClear; alpha = 1 - (t - 800) / 500;
+    } else if (t < 1600) {
+      text = G.bannerNext;  alpha = 1;
+    } else {
+      text = G.bannerNext;  alpha = 1 - (t - 1600) / 300;
+    }
+    ctx.save();
+    ctx.globalAlpha   = Math.max(0, alpha);
+    ctx.textAlign     = 'center';
+    ctx.textBaseline  = 'middle';
+    ctx.font          = 'bold 18px "Courier New", monospace';
+    ctx.fillStyle     = '#00ffff';
+    ctx.shadowBlur    = 0;
+    const bannerY = CH * 0.40;
+    ctx.fillText(text, CW / 2, bannerY);
+    // Horizontal lines expanding from center
+    const lineW = Math.min(t / 800, 1) * 80;
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(CW / 2 - lineW, bannerY - 14);
+    ctx.lineTo(CW / 2 + lineW, bannerY - 14);
+    ctx.moveTo(CW / 2 - lineW, bannerY + 14);
+    ctx.lineTo(CW / 2 + lineW, bannerY + 14);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── 3b. Wave bonus gold text ──────────────────────────────────
+  if (G.waveBonusTimer >= 0 && G.waveBonusTimer < 1200) {
+    var wbAlpha = G.waveBonusTimer < 800 ? 1 : 1 - (G.waveBonusTimer - 800) / 400;
+    ctx.save();
+    ctx.globalAlpha  = Math.max(0, wbAlpha);
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font         = 'bold 16px "Courier New", monospace';
+    ctx.fillStyle    = '#f59e0b';
+    ctx.fillText(G.waveBonusText || '', CW / 2, CH * 0.52);
+    ctx.restore();
+  }
+
+  // ── Boss warning text ──
+  if (G.bossWarningTimer >= 0 && G.bossWarningTimer < 1000) {
+    var bwAlpha = G.bossWarningTimer < 700 ? 1 : 1 - (G.bossWarningTimer - 700) / 300;
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, bwAlpha);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 24px "Courier New", monospace';
+    ctx.fillStyle = '#ff9900';
+    ctx.fillText('! BOSS', CW / 2, CH * 0.25);
+    ctx.restore();
+  }
+
+  // ── 4. Tower stats popup ─────────────────────────────────────
+  renderTowerPopup();
+
+  // ── 5. HUD (full screen, no zoom) ────────────────────────────
+  renderHUD();
+}
+
+function renderTowerPopup() {
+  if (!G || !G.showTowerStats) return;
+  const lines = [
+    'ATK 공격력: ' + G.tower.dmg,
+    'SPD 속도: '   + (G.tower.atkMs / 1000).toFixed(2) + 's',
+    'RNG 범위: '   + Math.round(G.tower.range),
+    'DEF 방어구: ' + G.armor,
+    'HP: '     + Math.ceil(G.tower.hp) + '/' + G.tower.maxHp,
+  ];
+  if (G.lifeSteal > 0) lines.push('* 흡혈: ' + G.lifeSteal);
+  if (G.critChance > 0) lines.push('! 치명타: ' + Math.round(G.critChance * 100) + '%');
+
+  const lineH = 18, popW = 160, popPad = 8;
+  const popH  = lines.length * lineH + popPad * 2;
+  const popX  = CW / 2 - popW / 2;
+  const popY  = CH / 2 - 13 - 12 - popH;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,16,38,0.93)';
+  rrect(popX, popY, popW, popH, 8);
+  ctx.strokeStyle = 'rgba(74,138,255,0.4)';
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(popX, popY, popW, popH, 8); else ctx.rect(popX, popY, popW, popH);
+  ctx.stroke();
+  ctx.font         = '11px Arial';
+  ctx.fillStyle    = '#93c5fd';
+  ctx.textAlign    = 'left';
+  ctx.textBaseline = 'top';
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], popX + popPad, popY + popPad + i * lineH);
+  }
+  ctx.restore();
+}
+
+function rrect(x, y, w, h, r) {
+  if (w <= 0 || h <= 0) return;
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); }
+  else { ctx.rect(x, y, w, h); }
+  ctx.fill();
+}
+
+function renderHUD() {
+  const pad  = 8;
+  const panH = 50;
+
+  ctx.save();
+
+  // ── HUD background panel ──
+  ctx.fillStyle = '#030b10';
+  ctx.fillRect(0, 0, CW, panH);
+  ctx.strokeStyle = 'rgba(0,255,255,0.20)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, panH);
+  ctx.lineTo(CW, panH);
+  ctx.stroke();
+
+  // ── Wave label ──
+  ctx.textBaseline = 'middle';
+  ctx.font         = '700 12px "Courier New", monospace';
+  ctx.fillStyle    = '#00ffff';
+  ctx.fillText('WAVE ' + String(G.wave).padStart(2, '0') + (G.isBossWave ? '  BOSS' : ''), pad, pad + 7);
+
+  // ── HP bar (4px) ──
+  const barW = Math.floor(CW * 0.36);
+  const barH = 4;
+  const barX = pad;
+  const barY = pad + 22;
+  const hr   = G.tower.hp / G.tower.maxHp;
+
+  ctx.fillStyle = '#0a1a2a';
+  ctx.fillRect(barX, barY, barW, barH);
+  ctx.fillStyle = '#00ff88';
+  if (hr <= 0.3) ctx.fillStyle = '#ef4444';
+  else if (hr <= 0.5) ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(barX, barY, Math.max(0, barW * hr), barH);
+
+  ctx.font         = '400 10px "Courier New", monospace';
+  ctx.fillStyle    = '#94a3b8';
+  ctx.textBaseline = 'top';
+  ctx.fillText((G.tower.hp).toFixed(1) + ' / ' + (G.tower.maxHp).toFixed(1), barX, barY + barH + 3);
+
+  // ── Pause button (top right 28×28, square) ──
+  const pbW = 28, pbH = 28;
+  const pbX = CW - pad - pbW;
+  const pbY = (panH - pbH) / 2;
+  _pauseBtnRect = { x: pbX, y: pbY, w: pbW, h: pbH };
+  ctx.fillStyle = '#030b10';
+  ctx.fillRect(pbX, pbY, pbW, pbH);
+  ctx.strokeStyle = '#0a3344';
+  ctx.lineWidth   = 1;
+  ctx.strokeRect(pbX, pbY, pbW, pbH);
+  ctx.font         = '14px "Courier New", monospace';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle    = '#00ffff';
+  ctx.fillText('||', pbX + pbW / 2, pbY + pbH / 2);
+
+  // ── Gold & Gems (right, shifted left of pause btn) ──
+  const rightEdge = pbX - 6;
+  ctx.textAlign    = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.font         = '700 12px "Courier New", monospace';
+  ctx.fillStyle    = '#f59e0b';
+  ctx.fillText('\u25CF ' + G.gold, rightEdge, pad + 7);
+  ctx.fillStyle    = '#00ffff';
+  ctx.fillText('\u25C6 ' + G.gems, rightEdge, pad + 24);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '10px "Courier New", monospace';
+  ctx.fillText('\u2620 ' + G.killCount, rightEdge, pad + 38);
+  ctx.textAlign    = 'left';
+
+  // ── Buff timer ──
+  if (G.tower.buffMs > 0) {
+    const sec = Math.ceil(G.tower.buffMs / 1000);
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font         = 'bold 11px "Courier New", monospace';
+    ctx.fillStyle    = '#fb923c';
+    ctx.fillText('x2  ' + sec + 's', CW / 2, pad + 8);
+    ctx.textAlign = 'left';
+  }
+
+  ctx.restore();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   IN-GAME UPGRADES (임시) — 탭 시스템
+═══════════════════════════════════════════════════════════════ */
+let activeTab = 'atk';
+let _pendingHighlight = null;
+
+function isUnlocked(key) {
+  return !key || !!PERM.unlocks[key];
+}
+
+function buildCards() {
+  for (const tabKey of ['atk', 'def', 'spc']) {
+    const pane = document.getElementById('pane-' + tabKey);
+    if (!pane) continue;
+    pane.innerHTML = '';
+    for (const upg of UPGRADES) {
+      if (upg.tab !== tabKey) continue;
+      if (!isUnlocked(upg.unlock)) continue; // 잠긴 항목은 표시 안 함
+      const btn = document.createElement('button');
+      btn.id        = 'upg-card-' + upg.key;
+      btn.className = 'upg-card upgrade-btn';
+      const statText = G ? upg.stat() : '-';
+      btn.innerHTML =
+        '<span class="card-icon">'  + upg.icon + '</span>' +
+        '<span class="card-name">'  + upg.name + '</span>' +
+        '<span class="card-stat" id="cs-' + upg.key + '">' + statText + '</span>' +
+        '<span class="card-cost" id="cc-' + upg.key + '">'  + (typeof upg.cost === 'function' ? upg.cost() : upg.cost) + '◈</span>';
+      btn.addEventListener('touchstart', function(ev) { ev.preventDefault(); }, { passive: false });
+      btn.addEventListener('touchend',   function(ev) { ev.preventDefault(); doUpgrade(upg.key); }, { passive: false });
+      btn.addEventListener('click', function() { doUpgrade(upg.key); });
+      pane.appendChild(btn);
+    }
+  }
+}
+
+function setActiveTab(tabKey) {
+  activeTab = tabKey;
+  for (const k of ['atk', 'def', 'spc']) {
+    const tb = document.getElementById('tab-' + k);
+    const pn = document.getElementById('pane-' + k);
+    if (tb) tb.classList.toggle('active', k === tabKey);
+    if (pn) pn.classList.toggle('active', k === tabKey);
+  }
+}
+
+function syncUI() {
+  if (!G || G.phase === 'gameover') return;
+  for (const upg of UPGRADES) {
+    const card = document.getElementById('upg-card-' + upg.key);
+    if (!card || !isUnlocked(upg.unlock)) continue;
+    const statEl = document.getElementById('cs-' + upg.key);
+    if (statEl) statEl.textContent = upg.stat();
+    const costEl = document.getElementById('cc-' + upg.key);
+    if (costEl) costEl.textContent = (typeof upg.cost === 'function' ? upg.cost() : upg.cost) + '◈';
+    card.classList.toggle('no-gold', !upg.canBuy());
+  }
+}
+
+function doUpgrade(key) {
+  if (!G || G.phase !== 'playing') return;
+  const upg = UPGRADES.find(function(u) { return u.key === key; });
+  if (!upg || !isUnlocked(upg.unlock) || !upg.canBuy()) return;
+  upg.apply();
+  AudioManager.playSfx('upgrade');
+  PERM.upgradeCount++;
+  checkAchievements();
+  syncUI();
+}
+
+function applyPendingHighlight() {
+  if (!_pendingHighlight) return;
+  const key = _pendingHighlight;
+  _pendingHighlight = null;
+  setTimeout(function() {
+    const card = document.getElementById('upg-card-' + key);
+    if (!card) return;
+    card.classList.add('card-highlight');
+    setTimeout(function() { card.classList.remove('card-highlight'); }, 1600);
+  }, 80);
+}
+
+// Tab button bindings
+(function() {
+  for (const k of ['atk', 'def', 'spc']) {
+    const btn = document.getElementById('tab-' + k);
+    if (!btn) continue;
+    btn.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+    btn.addEventListener('touchend',   function(e) { e.preventDefault(); setActiveTab(k); }, { passive: false });
+    btn.addEventListener('click', function() { setActiveTab(k); });
+  }
+}());
+
+/* ═══════════════════════════════════════════════════════════════
+   CANVAS TAP HANDLER
+═══════════════════════════════════════════════════════════════ */
+function handleCanvasTap(tx, ty) {
+  if (!G || G.phase === 'gameover') return;
+
+  // Pause button hit test
+  const pb = _pauseBtnRect;
+  if (tx >= pb.x && tx <= pb.x + pb.w && ty >= pb.y && ty <= pb.y + pb.h) {
+    openPauseMenu();
+    return;
+  }
+
+  // Tower tap hit test (tower always at CW/2, CH/2 in screen coords)
+  const tdx = tx - CW / 2, tdy = ty - CH / 2;
+  if (tdx * tdx + tdy * tdy < 34 * 34) {
+    G.showTowerStats = !G.showTowerStats;
+  } else {
+    G.showTowerStats = false;
+  }
+}
+
+(function() {
+  function tapFromMouse(e) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = CW / rect.width, sy = CH / rect.height;
+    handleCanvasTap((e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy);
+  }
+  function tapFromTouch(e) {
+    e.preventDefault();
+    const rect  = canvas.getBoundingClientRect();
+    const sx = CW / rect.width, sy = CH / rect.height;
+    const t  = e.changedTouches[0];
+    handleCanvasTap((t.clientX - rect.left) * sx, (t.clientY - rect.top) * sy);
+  }
+  canvas.addEventListener('click',     tapFromMouse);
+  canvas.addEventListener('touchend',  tapFromTouch, { passive: false });
+}());
+
+/* ═══════════════════════════════════════════════════════════════
+   PAUSE / SPEED / CONFIRM / ACHIEVEMENTS / SETTINGS
+═══════════════════════════════════════════════════════════════ */
+function openPauseMenu() {
+  if (!G || G.phase === 'gameover') return;
+  G.phase = 'paused';
+  document.getElementById('pause-screen').classList.add('show');
+}
+
+function closePauseMenu() {
+  document.getElementById('pause-screen').classList.remove('show');
+  if (G && G.phase === 'paused') G.phase = 'playing';
+}
+
+function cycleSpeed() {
+  if (!G) return;
+  G.speed = (G.speed % 3) + 1;
+  gameSpeed = G.speed;
+  const sb = document.getElementById('speed-btn');
+  if (sb) sb.textContent = G.speed + '×';
+}
+
+function showConfirm(msg, onOk) {
+  _confirmCb = onOk;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-popup').classList.add('show');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-popup').classList.remove('show');
+  _confirmCb = null;
+}
+
+function buildAchieveUI() {
+  const list = document.getElementById('ach-list');
+  if (!list) return;
+  list.innerHTML = '';
+  for (const ach of ACHIEVEMENTS) {
+    const claimed = PERM.achievements[ach.key] === 'claimed';
+    const met     = ach.cond();
+    const div = document.createElement('div');
+    div.className = 'ach-item' + (claimed ? ' claimed' : '');
+    div.innerHTML =
+      '<span class="ach-icon">' + ach.icon + '</span>' +
+      '<div class="ach-info">' +
+        '<div class="ach-name">' + ach.name + '</div>' +
+        '<div class="ach-desc">' + ach.desc + '</div>' +
+        '<div class="ach-prog">' + ach.prog() + '</div>' +
+      '</div>' +
+      '<span class="ach-reward">' +
+        (claimed ? '수령 완료' : (met ? '+' + ach.gems + '◆ 수령!' : '+' + ach.gems + '◆')) +
+      '</span>';
+    list.appendChild(div);
+  }
+}
+
+function syncSettingsUI() {
+  for (const key of ['sound', 'music', 'vibration']) {
+    const btn = document.getElementById('tog-' + key);
+    if (!btn) continue;
+    const on = PERM.settings[key];
+    btn.className = 'toggle-track' + (on ? ' on' : '');
+  }
+  // Language toggle
+  var langBtn = document.getElementById('tog-lang');
+  if (langBtn) {
+    var isKo = (PERM.settings.lang || 'ko') === 'ko';
+    langBtn.className = 'toggle-track' + (isKo ? '' : ' on');
+  }
+}
+
+function toggleSetting(key) {
+  if (key === 'lang') {
+    PERM.settings.lang = (PERM.settings.lang || 'ko') === 'ko' ? 'en' : 'ko';
+  } else {
+    PERM.settings[key] = !PERM.settings[key];
+  }
+  savePerm();
+  syncSettingsUI();
+  if (key === 'sound') AudioManager.toggleSFX(PERM.settings.sound);
+  if (key === 'music') AudioManager.toggleBGM(PERM.settings.music);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHOP LOGIC
+═══════════════════════════════════════════════════════════════ */
+function openShop() {
+  document.getElementById('results-screen').classList.remove('show');
+  document.getElementById('screen-game').style.display = 'none';
+  const home = document.getElementById('screen-home');
+  home.style.display = 'flex';
+  buildUnlockUI();
+  syncShopUI();
+  checkNavUnlocks();
+  checkSideUnlocks();
+}
+
+function syncShopUI() {
+  document.getElementById('home-gold').textContent = PERM.gold;
+  document.getElementById('home-gem').textContent  = PERM.gems;
+  for (const key of Object.keys(SHOP_ITEMS)) {
+    const cfg  = SHOP_ITEMS[key];
+    const lv   = PERM[key + 'Lv'];
+    const maxed = lv >= cfg.maxLv;
+    document.getElementById('sl-' + key).textContent = 'Lv.' + lv;
+    document.getElementById('se-' + key).textContent = maxed ? '최대 레벨' : cfg.effect();
+    const btn = document.getElementById('sb-' + key);
+    var shopCost = getUpgradeCost(cfg.baseCost, lv);
+    btn.classList.toggle('disabled', maxed || PERM.gold < shopCost);
+    btn.textContent = maxed ? 'MAX' : shopCost + '◈';
+  }
+}
+
+function shopUpgrade(key) {
+  const cfg = SHOP_ITEMS[key];
+  var lv = PERM[key + 'Lv'];
+  var cost = getUpgradeCost(cfg.baseCost, lv);
+  if (!cfg || PERM.gold < cost || lv >= cfg.maxLv) return;
+  PERM.gold -= cost;
+  PERM[key + 'Lv']++;
+  savePerm();
+  showShopFlash();
+  syncShopUI();
+}
+
+let _flashTimer = null;
+function showShopFlash() {
+  const el = document.getElementById('shop-flash');
+  el.classList.add('show');
+  clearTimeout(_flashTimer);
+  _flashTimer = setTimeout(function() { el.classList.remove('show'); }, 1500);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHOP UNLOCK SECTION
+═══════════════════════════════════════════════════════════════ */
+function buildUnlockUI() {
+  const section = document.getElementById('unlock-section');
+  if (!section) return;
+  section.innerHTML = '<p class="unlock-title">■ 특수 해금</p>';
+  for (const ul of UNLOCKS) {
+    const owned = !!PERM.unlocks[ul.key];
+    const div = document.createElement('div');
+    div.className = 'unlock-item' + (owned ? ' owned' : '');
+    div.id = 'unlock-item-' + ul.key;
+    div.innerHTML =
+      '<div class="ui-info">' +
+        '<span class="ui-name">' + ul.icon + ' ' + ul.name + '</span>' +
+        '<span class="ui-desc">' + ul.desc + '</span>' +
+      '</div>' +
+      '<button class="ui-btn' + (owned ? ' owned-btn' : '') + '" id="unlock-btn-' + ul.key + '">' +
+        (owned ? '보유' : ul.gems + '◆') +
+      '</button>';
+    section.appendChild(div);
+    if (!owned) {
+      const btn = div.querySelector('button');
+      btn.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+      btn.addEventListener('touchend',   function(e) { e.preventDefault(); buyUnlock(ul.key); }, { passive: false });
+      btn.addEventListener('click', function() { buyUnlock(ul.key); });
+    }
+  }
+}
+
+function syncUnlockUI() {
+  for (const ul of UNLOCKS) {
+    const owned = !!PERM.unlocks[ul.key];
+    const item  = document.getElementById('unlock-item-' + ul.key);
+    const btn   = document.getElementById('unlock-btn-' + ul.key);
+    if (!item || !btn) continue;
+    item.className = 'unlock-item' + (owned ? ' owned' : '');
+    if (owned) {
+      btn.className = 'ui-btn owned-btn';
+      btn.textContent = '보유';
+    } else {
+      btn.className = 'ui-btn' + (PERM.gems < ul.gems ? ' disabled' : '');
+      btn.textContent = ul.gems + '◆';
+    }
+  }
+}
+
+function buyUnlock(key) {
+  const ul = UNLOCKS.find(function(u) { return u.key === key; });
+  if (!ul || PERM.unlocks[ul.key] || PERM.gems < ul.gems) return;
+  PERM.gems -= ul.gems;
+  PERM.unlocks[ul.key] = true;
+  savePerm();
+  buildUnlockUI();
+  syncShopUI();
+  showShopFlash();
+  // Prepare highlight for when game starts
+  _pendingHighlight = ul.key;
+  // Rebuild cards now to show unlocked state
+  buildCards();
+  // Auto-switch to the relevant tab
+  setActiveTab(ul.tab);
+}
+
+function startNewGame() {
+  document.getElementById('screen-home').style.display = 'none';
+  document.getElementById('screen-game').style.display = '-webkit-flex';
+  document.getElementById('screen-game').style.display = 'flex';
+  loopGen++;
+  resizeCanvas();
+  startGame();
+}
+
+/* ─── 버튼 이벤트 (touch + click) ─────────────────────────────── */
+function bindOverlayBtn(id, fn) {
+  const el = document.getElementById(id);
+  el.addEventListener('touchstart', function(e) { e.preventDefault(); }, { passive: false });
+  el.addEventListener('touchend',   function(e) { e.preventDefault(); fn(); }, { passive: false });
+  el.addEventListener('click', fn);
+}
+
+bindOverlayBtn('btn-retry', function() {
+  document.getElementById('results-screen').classList.remove('show');
+  startNewGame();
+});
+bindOverlayBtn('btn-go-home', function() {
+  document.getElementById('results-screen').classList.remove('show');
+  openShop();
+});
+bindOverlayBtn('btn-start-game', startNewGame);
+for (const key of Object.keys(SHOP_ITEMS)) {
+  bindOverlayBtn('sb-' + key, shopUpgrade.bind(null, key));
+}
+
+// Speed button
+bindOverlayBtn('speed-btn', cycleSpeed);
+
+// Pause menu
+bindOverlayBtn('btn-resume', closePauseMenu);
+bindOverlayBtn('btn-restart', function() {
+  showConfirm('다시 시작할까요?\n현재 진행 사항이 사라져요', function() {
+    closeConfirm();
+    document.getElementById('pause-screen').classList.remove('show');
+    startNewGame();
+  });
+});
+bindOverlayBtn('btn-home', function() {
+  showConfirm('홈으로 이동할까요?\n현재 진행 사항이 사라져요', function() {
+    closeConfirm();
+    document.getElementById('pause-screen').classList.remove('show');
+    PERM.gold = G.gold;
+    PERM.gems = G.gems;
+    savePerm();
+    G.phase = 'gameover';
+    openShop();
+  });
+});
+bindOverlayBtn('btn-achieve', function() {
+  buildAchieveUI();
+  document.getElementById('achieve-screen').classList.add('show');
+});
+bindOverlayBtn('btn-settings', function() {
+  syncSettingsUI();
+  document.getElementById('settings-screen').classList.add('show');
+});
+
+// Achievement screen
+bindOverlayBtn('btn-achieve-back', function() {
+  document.getElementById('achieve-screen').classList.remove('show');
+});
+
+// Settings screen
+bindOverlayBtn('btn-settings-back', function() {
+  document.getElementById('settings-screen').classList.remove('show');
+});
+(function() {
+  for (const k of ['sound', 'music', 'vibration', 'lang']) {
+    (function(key) {
+      bindOverlayBtn('tog-' + key, function() { toggleSetting(key); });
+    }(k));
+  }
+}());
+
+// Data reset button
+bindOverlayBtn('btn-data-reset', function() {
+  showConfirm('모든 데이터를 초기화할까요?\n되돌릴 수 없습니다!', function() {
+    closeConfirm();
+    try { localStorage.removeItem('td_perm'); localStorage.removeItem('td_day'); } catch(_){}
+    location.reload();
+  });
+});
+
+// Confirm popup
+bindOverlayBtn('confirm-ok', function() {
+  const cb = _confirmCb;
+  closeConfirm();
+  if (cb) cb();
+});
+bindOverlayBtn('confirm-cancel', closeConfirm);
+
+/* ─── Anti double-tap zoom ─────────────────────────────────────── */
+var _lastTap = 0;
+document.addEventListener('touchend', function(e) {
+  var now = Date.now();
+  if (now - _lastTap < 300) e.preventDefault();
+  _lastTap = now;
+}, { passive: false });
+
+/* ═══════════════════════════════════════════════════════════════
+   LOADING SCREEN
+═══════════════════════════════════════════════════════════════ */
+(function() {
+  const DURATION = 1500; // ms to reach 100%
+  const fill  = document.getElementById('ld-bar-fill');
+  const pctEl = document.getElementById('ld-pct');
+  const start = performance.now();
+
+  function tick(now) {
+    const elapsed = now - start;
+    const pct = Math.min(100, Math.round((elapsed / DURATION) * 100));
+    fill.style.width  = pct + '%';
+    pctEl.textContent = pct + '%';
+
+    if (pct < 100) {
+      requestAnimationFrame(tick);
+    } else {
+      // 로딩 완료 → boot 후 전환
+      resizeCanvas();
+      loadPerm();
+
+      // 1. 0.3초 대기
+      setTimeout(function() {
+        // 2. 로딩화면 fade out
+        document.getElementById('screen-loading').style.transition = 'opacity 0.5s';
+        document.getElementById('screen-loading').style.opacity    = '0';
+
+        setTimeout(function() {
+          // 3. 로딩화면 숨기기
+          document.getElementById('screen-loading').style.display = 'none';
+
+          // 4. 타이틀 화면 표시
+          var titleScreen = document.getElementById('screen-title');
+          titleScreen.classList.add('show');
+
+          // 5. 탭하면 홈화면으로 전환
+          var titleTapped = false;
+          function goToHome() {
+            if (titleTapped) return;
+            titleTapped = true;
+            AudioManager.init();
+            if (PERM.settings.music) AudioManager.playBGM();
+            titleScreen.classList.add('fade-out');
+            setTimeout(function() {
+              titleScreen.classList.remove('show');
+              titleScreen.classList.remove('fade-out');
+              // 홈화면 표시
+              var home = document.getElementById('screen-home');
+              home.style.display    = 'flex';
+              home.style.opacity    = '0';
+              home.style.transition = 'opacity 0.4s';
+              buildUnlockUI();
+              syncShopUI();
+              setTimeout(function() { home.style.opacity = '1'; }, 50);
+              setTimeout(function() { checkDailyReward(); }, 500);
+            }, 400);
+          }
+          titleScreen.addEventListener('click', goToHome);
+          titleScreen.addEventListener('touchend', function(e) { e.preventDefault(); goToHome(); });
+
+        }, 500);
+      }, 300);
+    }
+  }
+
+  requestAnimationFrame(tick);
+}());
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOT  (called from loading screen above)
+═══════════════════════════════════════════════════════════════ */
+
+// Nav lock system
+var navLockConditions = {
+  tournament: { label: '토너먼트', wave: 15, tooltip: '웨이브 15 달성 시 해금' },
+  guild:      { label: '길드',     wave: 30, tooltip: '웨이브 30 달성 시 해금' },
+  season:     { label: '시즌',     wave: 50, tooltip: '웨이브 50 달성 시 해금' },
+};
+
+function showNavLockTooltip(text) {
+  var existing = document.querySelector('.nav-lock-tooltip');
+  if (existing) existing.remove();
+  var tip = document.createElement('div');
+  tip.className = 'nav-lock-tooltip';
+  tip.textContent = text;
+  document.body.appendChild(tip);
+  setTimeout(function() { if (tip.parentNode) tip.remove(); }, 1500);
+}
+
+function checkNavUnlocks() {
+  var best = PERM.bestWave || 0;
+  var allBtns = document.querySelectorAll('[data-navlock]');
+  for (var i = 0; i < allBtns.length; i++) {
+    var btn = allBtns[i];
+    var key = btn.getAttribute('data-navlock');
+    var cfg = navLockConditions[key];
+    if (!cfg) continue;
+    if (best >= cfg.wave) {
+      btn.setAttribute('data-locked', 'false');
+      btn.style.color = '#00ffff';
+      var spans = btn.querySelectorAll('span');
+      for (var s = 0; s < spans.length; s++) spans[s].style.color = '#00ffff';
+    } else {
+      btn.setAttribute('data-locked', 'true');
+      btn.style.color = '#1a2a3a';
+      var spans2 = btn.querySelectorAll('span');
+      for (var s2 = 0; s2 < spans2.length; s2++) spans2[s2].style.color = '#1a2a3a';
+    }
+  }
+}
+
+function getNewUnlocks() {
+  var best = PERM.bestWave || 0;
+  var unlocked = [];
+  try {
+    var saved = JSON.parse(localStorage.getItem('td_nav_unlocked') || '{}');
+    for (var key in navLockConditions) {
+      if (best >= navLockConditions[key].wave && !saved[key]) {
+        saved[key] = true;
+        unlocked.push(navLockConditions[key].label);
+      }
+    }
+    localStorage.setItem('td_nav_unlocked', JSON.stringify(saved));
+  } catch(e) {}
+  return unlocked;
+}
+
+// Bind click on all nav-lock buttons
+(function() {
+  var allBtns = document.querySelectorAll('[data-navlock]');
+  for (var i = 0; i < allBtns.length; i++) {
+    (function(btn) {
+      btn.addEventListener('click', function() {
+        if (btn.getAttribute('data-locked') === 'true') {
+          var key = btn.getAttribute('data-navlock');
+          var cfg = navLockConditions[key];
+          if (cfg) showNavLockTooltip(cfg.tooltip);
+        }
+      });
+      btn.addEventListener('touchend', function(e) {
+        e.preventDefault();
+        if (btn.getAttribute('data-locked') === 'true') {
+          var key = btn.getAttribute('data-navlock');
+          var cfg = navLockConditions[key];
+          if (cfg) showNavLockTooltip(cfg.tooltip);
+        }
+      });
+    })(allBtns[i]);
+  }
+}());
+
+// Side button unlock conditions
+var sideLockConditions = {
+  event:   { wave: 10, tooltip: '웨이브 10 달성 시 해금' },
+  ranking: { wave: 20, tooltip: '웨이브 20 달성 시 해금' },
+  power:   { wave: 30, tooltip: '파워스톤 (웨이브 30 달성 시 해금)' },
+};
+
+function checkSideUnlocks() {
+  var best = PERM.bestWave || 0;
+  var sideBtns = document.querySelectorAll('[data-sidelock]');
+  for (var i = 0; i < sideBtns.length; i++) {
+    var btn = sideBtns[i];
+    var key = btn.getAttribute('data-sidelock');
+    var cfg = sideLockConditions[key];
+    if (!cfg) continue;
+    if (best >= cfg.wave) {
+      btn.style.color = '#00ffff';
+      btn.style.background = '#0a1a2a';
+      btn.style.borderColor = '#0a3344';
+      var spans = btn.querySelectorAll('span');
+      for (var s = 0; s < spans.length; s++) spans[s].style.color = '#00ffff';
+      btn.setAttribute('data-sidelock', '');
+    }
+  }
+}
+
+// Side button click handlers
+(function() {
+  var sideAchieve = document.getElementById('side-achieve');
+  if (sideAchieve) {
+    sideAchieve.addEventListener('click', function() {
+      try {
+        buildAchieveUI();
+        document.getElementById('achieve-screen').classList.add('show');
+      } catch(e) {}
+    });
+  }
+  var sideBtns = document.querySelectorAll('[data-sidelock]');
+  for (var i = 0; i < sideBtns.length; i++) {
+    (function(btn) {
+      btn.addEventListener('click', function() {
+        var key = btn.getAttribute('data-sidelock');
+        if (key && sideLockConditions[key]) {
+          showNavLockTooltip(sideLockConditions[key].tooltip);
+        }
+      });
+    })(sideBtns[i]);
+  }
+}());
+
+// Initial unlock check
+checkNavUnlocks();
+checkSideUnlocks();
+
+// Daily reward claim
+var dailyClaimBtn = document.getElementById('daily-claim-btn');
+if (dailyClaimBtn) {
+  dailyClaimBtn.addEventListener('click', function() {
+    document.getElementById('daily-popup').style.display = 'none';
+    try { syncShopUI(); } catch(e) {}
+  });
+}
+
+</script>
+
+<!-- ── 홈화면 전용 스크립트 (기존 코드 불변) ── -->
+<script>
+(function() {
+  'use strict';
+
+  /* ── 난이도 티어 설정 ── */
+  var TIERS = [
+    { name: '티어 1', mult: 1.0 },
+    { name: '티어 2', mult: 1.5 },
+    { name: '티어 3', mult: 2.0 },
+    { name: '티어 4', mult: 3.0 },
+    { name: '티어 5', mult: 5.0 },
+  ];
+  var curTier = 0;
+
+  function applyTier() {
+    var t = TIERS[curTier];
+    document.getElementById('tier-name').textContent       = t.name;
+    document.getElementById('tier-multiplier').textContent = t.mult.toFixed(1);
+  }
+
+  function refreshHomeData() {
+    /* bestWave: PERM은 기존 script의 전역 변수 */
+    try {
+      document.getElementById('home-best-wave').textContent = (PERM.bestWave || 0);
+    } catch (e) {}
+    applyTier();
+  }
+
+  /* ── 난이도 화살표 ── */
+  document.getElementById('tier-prev').addEventListener('click', function() {
+    curTier = (curTier - 1 + TIERS.length) % TIERS.length;
+    applyTier();
+  });
+  document.getElementById('tier-next').addEventListener('click', function() {
+    curTier = (curTier + 1) % TIERS.length;
+    applyTier();
+  });
+
+  /* ── 설정 버튼 (기존 설정 화면 연동) ── */
+  var hSet = document.getElementById('h-btn-settings');
+  if (hSet) {
+    hSet.addEventListener('click', function() {
+      try { syncSettingsUI(); } catch(e) {}
+      document.getElementById('settings-screen').classList.add('show');
+    });
+  }
+
+  /* ── screen-home 가시성 감지 → 데이터 갱신 ── */
+  var homeEl = document.getElementById('screen-home');
+  var obs = new MutationObserver(function() {
+    if (homeEl.style.display && homeEl.style.display !== 'none') {
+      refreshHomeData();
+    }
+  });
+  obs.observe(homeEl, { attributes: true, attributeFilter: ['style'] });
+
+}());
+</script>
+
+<!-- ── 강화 스크립트 ── -->
+<script>
+(function() {
+  'use strict';
+
+  /* ══ WS_ITEMS 정의 ══ */
+  var WS_ITEMS = {
+    damage:     { tab:'atk', name:'대미지',      maxLv:20,
+      cost: function(lv) { return 3 + Math.floor(lv * 1.8); },
+      cur:  function(lv) { return '+' + lv; },
+      nxt:  function(lv) { return '+' + (lv + 1); } },
+    atkspd:     { tab:'atk', name:'공격 속도',   maxLv:10,
+      cost: function(lv) { return 5 + lv * 4; },
+      cur:  function(lv) { return lv === 0 ? '기본' : '-' + (lv * 20) + 'ms'; },
+      nxt:  function(lv) { return '-' + ((lv + 1) * 20) + 'ms'; } },
+    critChance: { tab:'atk', name:'치명타 확률', maxLv:10,
+      cost: function(lv) { return 8 + lv * 5; },
+      cur:  function(lv) { return (lv * 5) + '%'; },
+      nxt:  function(lv) { return ((lv + 1) * 5) + '%'; } },
+    critMult:   { tab:'atk', name:'치명타 계수', maxLv:5,
+      cost: function(lv) { return 15 + lv * 12; },
+      cur:  function(lv) { return (1.5 + lv * 0.25).toFixed(2) + 'x'; },
+      nxt:  function(lv) { return (1.5 + (lv + 1) * 0.25).toFixed(2) + 'x'; } },
+    maxHp:      { tab:'def', name:'최대 체력',   maxLv:20,
+      cost: function(lv) { return 3 + Math.floor(lv * 1.8); },
+      cur:  function(lv) { return '+' + (lv * 5); },
+      nxt:  function(lv) { return '+' + ((lv + 1) * 5); } },
+    defense:    { tab:'def', name:'방어력',      maxLv:10,
+      cost: function(lv) { return 8 + lv * 5; },
+      cur:  function(lv) { return lv + '%'; },
+      nxt:  function(lv) { return (lv + 1) + '%'; } },
+    hpRegen:    { tab:'def', name:'체력 재생',   maxLv:5,
+      cost: function(lv) { return 10 + lv * 10; },
+      cur:  function(lv) { return (lv * 0.5).toFixed(1) + '/s'; },
+      nxt:  function(lv) { return ((lv + 1) * 0.5).toFixed(1) + '/s'; } },
+    lifeSteal:  { tab:'def', name:'흡혈', locked:true, maxLv:5,
+      cost: function(lv) { return 20 + lv * 15; },
+      cur:  function(lv) { return lv + '%'; },
+      nxt:  function(lv) { return (lv + 1) + '%'; } },
+    goldGain:   { tab:'spc', name:'골드 획득량', maxLv:10,
+      cost: function(lv) { return 5 + lv * 4; },
+      cur:  function(lv) { return 'x' + (1 + lv * 0.1).toFixed(1); },
+      nxt:  function(lv) { return 'x' + (1 + (lv + 1) * 0.1).toFixed(1); } },
+    gemGain:    { tab:'spc', name:'보석 획득량', maxLv:5,
+      cost: function(lv) { return 10 + lv * 10; },
+      cur:  function(lv) { return 'x' + (1 + lv * 0.1).toFixed(1); },
+      nxt:  function(lv) { return 'x' + (1 + (lv + 1) * 0.1).toFixed(1); } },
+  };
+
+  var wsActiveTab = 'atk';
+
+  /* ══ 화면 열기 / 닫기 ══ */
+  function openWorkshop() {
+    document.getElementById('screen-home').style.display = 'none';
+    var el = document.getElementById('screen-workshop');
+    el.style.display = 'flex';
+    syncWorkshopHUD();
+    buildWorkshopContent(wsActiveTab);
+  }
+
+  function closeWorkshop() {
+    document.getElementById('screen-workshop').style.display = 'none';
+    var home = document.getElementById('screen-home');
+    home.style.display = 'flex';
+    try { syncShopUI(); } catch (e) {}
+  }
+
+  /* ══ HUD 동기화 ══ */
+  function syncWorkshopHUD() {
+    try {
+      document.getElementById('ws-gold').textContent = PERM.gold;
+      document.getElementById('ws-gem').textContent  = PERM.gems;
+    } catch (e) {}
+  }
+
+  /* ══ 콘텐츠 빌드 ══ */
+  function buildWorkshopContent(tab) {
+    wsActiveTab = tab;
+    var container = document.getElementById('ws-content');
+    if (!container) return;
+    container.innerHTML = '';
+
+    /* 탭 활성 스타일 */
+    var tabs = document.querySelectorAll('.ws-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      var isAct = tabs[i].dataset.tab === tab;
+      tabs[i].style.color        = isAct ? '#00ffff' : (tabs[i].disabled ? '#1a2a3a' : '#334455');
+      tabs[i].style.borderBottom = isAct ? '2px solid #00ffff' : '2px solid transparent';
+    }
+
+    var ws    = PERM.ws || {};
+    var keys  = Object.keys(WS_ITEMS).filter(function(k) { return WS_ITEMS[k].tab === tab; });
+    keys.forEach(function(key) { appendCard(container, key, ws); });
+
+    /* 공격 탭: 범위 잠금 해제 카드 (전체 너비) */
+    if (tab === 'atk') appendRangeUnlockCard(container, ws);
+  }
+
+  /* ══ 업그레이드 카드 생성 ══ */
+  function appendCard(container, key, ws) {
+    var cfg    = WS_ITEMS[key];
+    var lv     = ws[key] || 0;
+    var maxed  = lv >= cfg.maxLv;
+    var cost   = maxed ? 0 : cfg.cost(lv);
+    var afford = PERM.gold >= cost;
+    var locked = !!cfg.locked;
+
+    var card = document.createElement('div');
+    card.style.cssText =
+      'background:' + (locked ? '#0a1520' : '#0a1a2a') + ';' +
+      'border:1px solid ' + (locked ? '#1a2a3a' : '#0a3344') + ';' +
+      'border-left:2px solid rgba(0,255,255,' + (locked ? '0.08' : '0.30') + ');' +
+      'padding:12px;display:flex;flex-direction:row;' +
+      'justify-content:space-between;align-items:center;' +
+      'opacity:' + (locked ? '0.5' : '1') + ';' +
+      'transition:border-color 0.2s;' +
+      '-webkit-tap-highlight-color:transparent;';
+
+    var rightHTML;
+    if (locked) {
+      rightHTML = '<span style="font-size:11px;color:#1a2a3a;font-family:\'Courier New\',monospace;">■</span>';
+    } else if (maxed) {
+      rightHTML =
+        '<span style="font-size:15px;color:#00ffff;font-family:\'Courier New\',monospace;font-weight:bold;">' + cfg.cur(lv) + '</span>' +
+        '<span style="font-size:14px;color:#cc44ff;font-family:\'Courier New\',monospace;font-weight:bold;margin-top:3px;">MAX</span>';
+    } else {
+      rightHTML =
+        '<span style="font-size:15px;color:#00ffff;font-family:\'Courier New\',monospace;font-weight:bold;">' +
+          cfg.cur(lv) + '<span style="font-size:9px;color:#4a6a7a;"> → ' + cfg.nxt(lv) + '</span>' +
+        '</span>' +
+        '<button data-key="' + key + '" style="background:#030b10;border:1px solid ' +
+          (afford ? '#0a3344' : '#ef4444') + ';color:' +
+          (afford ? '#f59e0b' : '#ef4444') + ';font-size:11px;' +
+          'font-family:\'Courier New\',monospace;padding:4px 8px;cursor:pointer;' +
+          '-webkit-appearance:none;margin-top:3px;">◈' + cost + '</button>';
+    }
+
+    card.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:3px;">' +
+        '<span style="font-size:12px;color:#94a3b8;font-family:\'Courier New\',monospace;">' + cfg.name + '</span>' +
+        '<span style="font-size:10px;color:#556677;font-family:\'Courier New\',monospace;">Lv.' + lv + (maxed ? ' ✓' : '') + '</span>' +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:0px;">' + rightHTML + '</div>';
+
+    if (!locked && !maxed) {
+      var btn = card.querySelector('button');
+      (function(k, c) {
+        btn.addEventListener('click', function() { wsUpgrade(k, c); });
+      }(key, card));
+    }
+    container.appendChild(card);
+  }
+
+  /* ══ 범위 해금 카드 ══ */
+  function appendRangeUnlockCard(container, ws) {
+    var unlocked = !!ws.rangeUnlock;
+    var cost     = 50;
+    var afford   = PERM.gold >= cost;
+
+    var card = document.createElement('div');
+    card.style.cssText =
+      'grid-column:1/-1;' +
+      'background:#0a1a2a;' +
+      'border:1px solid ' + (unlocked ? '#00ffff44' : '#0a3344') + ';' +
+      'border-left:2px solid rgba(0,255,255,' + (unlocked ? '0.8' : '0.30') + ');' +
+      'padding:12px;display:flex;flex-direction:row;' +
+      'justify-content:space-between;align-items:center;' +
+      'transition:border-color 0.2s;';
+
+    var rightHTML = unlocked
+      ? '<span style="font-size:12px;color:#00ffff;font-family:\'Courier New\',monospace;">✓ 해금됨</span>'
+      : '<button style="background:#030b10;border:1px solid ' +
+          (afford ? '#0a3344' : '#ef4444') + ';color:' +
+          (afford ? '#f59e0b' : '#ef4444') + ';font-size:11px;' +
+          'font-family:\'Courier New\',monospace;padding:4px 10px;cursor:pointer;-webkit-appearance:none;">◈50</button>';
+
+    card.innerHTML =
+      '<div style="display:flex;flex-direction:column;gap:3px;">' +
+        '<span style="font-size:12px;color:#94a3b8;font-family:\'Courier New\',monospace;">범위 업그레이드 해금</span>' +
+        '<span style="font-size:10px;color:#334455;font-family:\'Courier New\',monospace;">인게임 범위 업그레이드 활성화</span>' +
+      '</div>' +
+      '<div>' + rightHTML + '</div>';
+
+    if (!unlocked) {
+      var btn = card.querySelector('button');
+      btn.addEventListener('click', function() {
+        if (PERM.gold < 50) { flashCard(card, '#ef4444'); return; }
+        PERM.gold -= 50;
+        if (!PERM.ws) PERM.ws = {};
+        PERM.ws.rangeUnlock = true;
+        savePerm();
+        flashCard(card, '#00ffff');
+        syncWorkshopHUD();
+        setTimeout(function() { buildWorkshopContent(wsActiveTab); }, 220);
+      });
+    }
+    container.appendChild(card);
+  }
+
+  /* ══ 업그레이드 실행 ══ */
+  function wsUpgrade(key, card) {
+    var ws    = PERM.ws || {};
+    var cfg   = WS_ITEMS[key];
+    var lv    = ws[key] || 0;
+    if (lv >= cfg.maxLv) return;
+    var cost  = cfg.cost(lv);
+    if (PERM.gold < cost) { flashCard(card, '#ef4444'); return; }
+    PERM.gold -= cost;
+    ws[key]    = lv + 1;
+    PERM.ws    = ws;
+    savePerm();
+    flashCard(card, '#00ffff');
+    syncWorkshopHUD();
+    setTimeout(function() { buildWorkshopContent(wsActiveTab); }, 220);
+  }
+
+  /* ══ 플래시 효과 ══ */
+  function flashCard(card, color) {
+    var orig = card.style.borderColor;
+    card.style.borderColor = color;
+    setTimeout(function() { card.style.borderColor = orig; }, 200);
+  }
+
+  /* ══ 탭 이벤트 ══ */
+  var tabBar = document.getElementById('ws-tab-bar');
+  if (tabBar) {
+    tabBar.addEventListener('click', function(e) {
+      var btn = e.target.closest
+        ? e.target.closest('.ws-tab')
+        : (e.target.classList.contains('ws-tab') ? e.target : null);
+      if (!btn || btn.disabled) return;
+      buildWorkshopContent(btn.dataset.tab);
+    });
+  }
+
+  /* ══ 네비게이션 ══ */
+  var navHome = document.getElementById('ws-nav-home');
+  if (navHome) navHome.addEventListener('click', closeWorkshop);
+
+  var workshopBtn = document.getElementById('h-nav-workshop');
+  if (workshopBtn) workshopBtn.addEventListener('click', openWorkshop);
+
+}());
+</script>
+
+<!-- ── 스토어 스크립트 ── -->
+<script>
+(function() {
+  'use strict';
+
+  var activeStoreTab = 'gem';
+
+  var gemProducts = [
+    { amount: 110,  price: '\u20A95,500',   bonus: null },
+    { amount: 330,  price: '\u20A914,000',  bonus: null },
+    { amount: 660,  price: '\u20A927,500',  bonus: '+20%' },
+    { amount: 1100, price: '\u20A944,000',  bonus: '+33%' },
+    { amount: 1870, price: '\u20A966,000',  bonus: '+40%' },
+    { amount: 3850, price: '\u20A9132,000', bonus: '+50% BEST', isBest: true },
+  ];
+
+  var packages = [
+    { name: '\uC2A4\uD0C0\uD130 \uD329', desc: '\uCF54\uC778 \uD68D\uB4DD x2.0 \uC601\uAD6C + \u25C6 150', price: '\u20A95,500' },
+    { name: '\uC131\uC7A5 \uD329', desc: '\uCF54\uC778 \uD68D\uB4DD x3.0 \uC601\uAD6C + \u25C6 500', price: '\u20A916,500' },
+    { name: '\uAD11\uACE0 \uC81C\uAC70', desc: '\uBAA8\uB4E0 \uAD11\uACE0 \uC81C\uAC70 + \uBCF4\uC11D \uD68D\uB4DD +50% \uC601\uAD6C', price: '\u20A911,000' },
+  ];
+
+  function syncStoreHUD() {
+    try {
+      document.getElementById('store-gold').textContent = PERM.gold;
+      document.getElementById('store-gem').textContent  = PERM.gems;
+    } catch (e) {}
+  }
+
+  function buildGemTab() {
+    var html = '';
+    // Free ad card
+    html += '<div style="margin:8px; background:#0a1a2a; border:1px solid rgba(0,255,255,0.2); padding:12px; display:flex; justify-content:space-between; align-items:center;">';
+    html += '<div><div style="color:#00ffff; font-family:monospace; font-size:11px;">\u25C6 x15 \uBB34\uB8CC</div>';
+    html += '<div style="color:#334455; font-family:monospace; font-size:9px;">\uAD11\uACE0 \uC2DC\uCCAD (\uD558\uB8E8 3\uD68C)</div></div>';
+    html += '<button id="btn-watch-ad" style="background:#030b10; border:1px solid #00ffff; color:#00ffff; font-family:monospace; font-size:10px; padding:6px 12px; cursor:pointer;" onclick="alert(\'\uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.\')">\uAD11\uACE0 \uBCF4\uAE30</button>';
+    html += '</div>';
+    // Gem grid
+    html += '<div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:8px;">';
+    for (var i = 0; i < gemProducts.length; i++) {
+      var gp = gemProducts[i];
+      html += '<div style="background:#0a1a2a; border:1px solid ' + (gp.isBest ? '#cc44ff' : '#0a3344') + '; padding:12px 8px; display:flex; flex-direction:column; align-items:center; gap:6px; position:relative;">';
+      if (gp.bonus) {
+        html += '<div style="position:absolute; top:4px; right:4px; background:#cc44ff; color:#fff; font-size:8px; padding:2px 4px; font-family:monospace;">' + gp.bonus + '</div>';
+      }
+      html += '<div style="color:#00ffff; font-size:24px;">\u25C6</div>';
+      html += '<div style="color:#00ffff; font-family:monospace; font-size:14px; font-weight:bold;">x' + gp.amount + '</div>';
+      html += '<button style="background:#030b10; border:1px solid #0a3344; color:#ffffff; font-family:monospace; font-size:11px; padding:4px 8px; cursor:pointer; width:100%;" onclick="alert(\'\uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.\')">' + gp.price + '</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function buildPackageTab() {
+    var html = '<div style="padding:8px; display:flex; flex-direction:column; gap:8px;">';
+    for (var i = 0; i < packages.length; i++) {
+      var pk = packages[i];
+      html += '<div style="background:#0a1a2a; border:1px solid #0a3344; border-left:4px solid #cc44ff; padding:12px; display:flex; justify-content:space-between; align-items:center;">';
+      html += '<div><div style="color:#cc44ff; font-family:monospace; font-size:12px; font-weight:bold;">' + pk.name + '</div>';
+      html += '<div style="color:#94a3b8; font-family:monospace; font-size:10px; margin-top:4px;">' + pk.desc + '</div></div>';
+      html += '<button style="background:#030b10; border:1px solid #cc44ff; color:#cc44ff; font-family:monospace; font-size:10px; padding:6px 10px; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-left:8px;" onclick="alert(\'\uC900\uBE44 \uC911\uC785\uB2C8\uB2E4.\')">' + pk.price + '</button>';
+      html += '</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function buildUnlockTab() {
+    var html = '<div style="padding:8px; display:flex; flex-direction:column; gap:6px;">';
+    try {
+      for (var i = 0; i < UNLOCKS.length; i++) {
+        var ul = UNLOCKS[i];
+        var owned = !!(PERM.unlocks && PERM.unlocks[ul.key]);
+        var afford = PERM.gems >= ul.gems;
+        html += '<div style="background:#0a1a2a; border:1px solid #0a3344; padding:10px 12px; display:flex; justify-content:space-between; align-items:center;' + (owned ? ' opacity:0.5;' : '') + '">';
+        html += '<div><div style="color:#ffffff; font-family:monospace; font-size:12px;">' + ul.name + '</div>';
+        html += '<div style="color:#94a3b8; font-family:monospace; font-size:10px; margin-top:2px;">' + ul.desc + '</div></div>';
+        if (owned) {
+          html += '<span style="color:#00ff88; font-family:monospace; font-size:12px; flex-shrink:0; margin-left:8px;">V \uD574\uC81C\uB428</span>';
+        } else {
+          var bdrColor = afford ? '#00ffff' : '#ef4444';
+          html += '<button data-unlock="' + ul.key + '" style="background:#030b10; border:1px solid ' + bdrColor + '; color:#00ffff; font-family:monospace; font-size:13px; padding:6px 10px; cursor:pointer; flex-shrink:0; margin-left:8px;">\u25C6' + ul.gems + '</button>';
+        }
+        html += '</div>';
+      }
+    } catch (e) {
+      html += '<div style="color:#334455; font-family:monospace; font-size:11px; padding:20px; text-align:center;">\uB370\uC774\uD130 \uB85C\uB4DC \uC624\uB958</div>';
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderStoreTab(tabKey) {
+    activeStoreTab = tabKey;
+    var content = document.getElementById('store-content');
+    if (!content) return;
+    if (tabKey === 'gem') content.innerHTML = buildGemTab();
+    else if (tabKey === 'package') content.innerHTML = buildPackageTab();
+    else if (tabKey === 'unlock') content.innerHTML = buildUnlockTab();
+
+    // Update tab buttons
+    var tabs = document.querySelectorAll('.store-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      var isActive = tabs[i].getAttribute('data-tab') === tabKey;
+      tabs[i].style.color = isActive ? '#00ffff' : '#334455';
+      tabs[i].style.borderBottom = isActive ? '2px solid #00ffff' : '2px solid transparent';
+    }
+
+    // Bind unlock buttons
+    if (tabKey === 'unlock') {
+      var btns = content.querySelectorAll('[data-unlock]');
+      for (var j = 0; j < btns.length; j++) {
+        (function(btn) {
+          btn.addEventListener('click', function() {
+            var key = btn.getAttribute('data-unlock');
+            try {
+              var ul = null;
+              for (var k = 0; k < UNLOCKS.length; k++) {
+                if (UNLOCKS[k].key === key) { ul = UNLOCKS[k]; break; }
+              }
+              if (!ul || PERM.gems < ul.gems || (PERM.unlocks && PERM.unlocks[key])) return;
+              PERM.gems -= ul.gems;
+              if (!PERM.unlocks) PERM.unlocks = {};
+              PERM.unlocks[key] = true;
+              savePerm();
+              syncStoreHUD();
+              renderStoreTab('unlock');
+            } catch (e) {}
+          });
+        })(btns[j]);
+      }
+    }
+  }
+
+  function openStore() {
+    document.getElementById('screen-home').style.display = 'none';
+    document.getElementById('screen-workshop').style.display = 'none';
+    var el = document.getElementById('screen-store');
+    el.style.display = 'flex';
+    syncStoreHUD();
+    renderStoreTab(activeStoreTab);
+  }
+
+  function closeStoreToHome() {
+    document.getElementById('screen-store').style.display = 'none';
+    var home = document.getElementById('screen-home');
+    home.style.display = 'flex';
+    try { syncShopUI(); } catch (e) {}
+  }
+
+  function closeStoreToWorkshop() {
+    document.getElementById('screen-store').style.display = 'none';
+    document.getElementById('screen-workshop').style.display = 'flex';
+  }
+
+  /* ── 탭 바인딩 ── */
+  var storeTabs = document.querySelectorAll('.store-tab');
+  for (var ti = 0; ti < storeTabs.length; ti++) {
+    (function(btn) {
+      btn.addEventListener('click', function() {
+        renderStoreTab(btn.getAttribute('data-tab'));
+      });
+    })(storeTabs[ti]);
+  }
+
+  /* ── 네비게이션 바인딩 ── */
+  var stNavHome = document.getElementById('st-nav-home');
+  if (stNavHome) stNavHome.addEventListener('click', closeStoreToHome);
+
+  var stNavWorkshop = document.getElementById('st-nav-workshop');
+  if (stNavWorkshop) stNavWorkshop.addEventListener('click', closeStoreToWorkshop);
+
+  var hNavStore = document.getElementById('h-nav-store');
+  if (hNavStore) hNavStore.addEventListener('click', openStore);
+
+  var wsNavStore = document.getElementById('ws-nav-store');
+  if (wsNavStore) wsNavStore.addEventListener('click', function() {
+    document.getElementById('screen-workshop').style.display = 'none';
+    openStore();
+  });
+
+}());
+</script>
+</body>
+</html>
