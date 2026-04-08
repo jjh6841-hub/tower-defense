@@ -1049,6 +1049,140 @@ canvas {
   80%  { opacity: 1; }
   100% { opacity: 0; }
 }
+/* ── Title screen ── */
+#screen-title {
+  position: fixed; inset: 0; z-index: 9998;
+  background: radial-gradient(ellipse at center, #001a22 0%, #030b10 70%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  overflow: hidden;
+  transition: opacity 0.4s ease;
+}
+#screen-title.show { display: flex; }
+#screen-title.fade-out { opacity: 0; pointer-events: none; }
+/* Grid overlay */
+#screen-title::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(0,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,255,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+#tt-version {
+  position: absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(18px + env(safe-area-inset-right, 0px));
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #334455;
+}
+#tt-title {
+  font-family: 'Courier New', monospace;
+  font-size: 38px;
+  font-weight: 700;
+  color: #00ffff;
+  letter-spacing: 8px;
+  text-shadow: 0 0 10px #00ffff, 0 0 25px #00ffff, 0 0 50px #00ffff;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+#tt-line {
+  width: 120px;
+  height: 1px;
+  background: rgba(0,255,255,0.4);
+  margin: 12px 0 8px;
+  position: relative;
+  z-index: 1;
+}
+#tt-sub {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  color: #0099bb;
+  letter-spacing: 4px;
+  position: relative;
+  z-index: 1;
+}
+.title-tower-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 30px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+.title-tower {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #00ffff;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: #001a22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: towerPulse 2s ease-in-out infinite;
+}
+.title-tower-inner {
+  width: 24px;
+  height: 24px;
+  border: 1px solid rgba(0,255,255,0.5);
+}
+@keyframes towerPulse {
+  0%, 100% { filter: drop-shadow(0 0 10px #00ffff) drop-shadow(0 0 20px rgba(0,255,255,0.3)); }
+  50% { filter: drop-shadow(0 0 20px #00ffff) drop-shadow(0 0 40px #00ffff); }
+}
+.orbit-dot {
+  width: 4px;
+  height: 4px;
+  background: #00ffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: -2px 0 0 -2px;
+  animation: orbit 3s linear infinite;
+  box-shadow: 0 0 6px #00ffff;
+}
+@keyframes orbit {
+  from { transform: rotate(0deg) translateX(60px); }
+  to { transform: rotate(360deg) translateX(60px); }
+}
+#tt-tap {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #00ffff;
+  letter-spacing: 2px;
+  animation: blink 1.2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+#tt-tap-line {
+  width: 80px;
+  height: 1px;
+  background: rgba(0,255,255,0.2);
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+#tt-maker {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  color: #334455;
+  z-index: 1;
+}
 </style>
 </head>
 <body>
@@ -1140,6 +1274,23 @@ canvas {
       <button class="confirm-ok" id="confirm-ok">확인</button>
     </div>
   </div>
+</div>
+
+<!-- ── 타이틀 화면 ── -->
+<div id="screen-title">
+  <span id="tt-version">v1.0.0</span>
+  <div id="tt-title">NEON CORE</div>
+  <div id="tt-line"></div>
+  <div id="tt-sub">TOWER DEFENSE</div>
+  <div class="title-tower-wrap">
+    <div class="title-tower"><div class="title-tower-inner"></div></div>
+    <div class="orbit-dot" style="animation-delay:0s;"></div>
+    <div class="orbit-dot" style="animation-delay:-1s;"></div>
+    <div class="orbit-dot" style="animation-delay:-2s;"></div>
+  </div>
+  <div id="tt-tap-line"></div>
+  <div id="tt-tap">- TAP TO START -</div>
+  <span id="tt-maker">MADE WITH ♥ BY STUDIO_X</span>
 </div>
 
 <!-- ── 결과 화면 ── -->
@@ -3140,20 +3291,31 @@ document.addEventListener('touchend', function(e) {
           // 3. 로딩화면 숨기기
           document.getElementById('screen-loading').style.display = 'none';
 
-          // 4. 홈화면 표시
-          const home = document.getElementById('screen-home');
-          home.style.display    = 'flex';
-          home.style.opacity    = '0';
-          home.style.transition = 'opacity 0.5s';
+          // 4. 타이틀 화면 표시
+          var titleScreen = document.getElementById('screen-title');
+          titleScreen.classList.add('show');
 
-          // 홈화면 데이터 준비
-          buildUnlockUI();
-          syncShopUI();
-
-          // 5. 홈화면 fade in
-          setTimeout(function() {
-            home.style.opacity = '1';
-          }, 50);
+          // 5. 탭하면 홈화면으로 전환
+          var titleTapped = false;
+          function goToHome() {
+            if (titleTapped) return;
+            titleTapped = true;
+            titleScreen.classList.add('fade-out');
+            setTimeout(function() {
+              titleScreen.classList.remove('show');
+              titleScreen.classList.remove('fade-out');
+              // 홈화면 표시
+              var home = document.getElementById('screen-home');
+              home.style.display    = 'flex';
+              home.style.opacity    = '0';
+              home.style.transition = 'opacity 0.4s';
+              buildUnlockUI();
+              syncShopUI();
+              setTimeout(function() { home.style.opacity = '1'; }, 50);
+            }, 400);
+          }
+          titleScreen.addEventListener('click', goToHome);
+          titleScreen.addEventListener('touchend', function(e) { e.preventDefault(); goToHome(); });
 
         }, 500);
       }, 300);
