@@ -2082,6 +2082,7 @@ function gameLoop(gen, ts) {
   G.lastTime = ts;
   const steps = (G.speed > 1 && G.phase === 'playing') ? G.speed : 1;
   for (let i = 0; i < steps; i++) update(rawDt);
+  updateShake();
   render();
   if (G.phase !== 'gameover') {
     requestAnimationFrame(function(nts) { gameLoop(gen, nts); });
@@ -2131,7 +2132,7 @@ function update(dt) {
     if (G.floatTexts[i].timer > 500) G.floatTexts.splice(i, 1);
   }
 
-  // Death particles
+  // Death particles (existing)
   for (let i = G.deathParticles.length - 1; i >= 0; i--) {
     const p = G.deathParticles[i];
     p.timer += dt;
@@ -2139,6 +2140,23 @@ function update(dt) {
     p.y += p.vy * (dt / 1000);
     if (p.timer > 300) G.deathParticles.splice(i, 1);
   }
+  // Enhanced colored particles
+  if (!G.particles) G.particles = [];
+  for (let i = G.particles.length - 1; i >= 0; i--) {
+    const p = G.particles[i];
+    p.x   += p.vx;
+    p.y   += p.vy;
+    p.vx  *= 0.92;
+    p.vy  *= 0.92;
+    p.life -= p.decay;
+    p.size *= 0.95;
+    if (p.life <= 0) G.particles.splice(i, 1);
+  }
+  // Shoot flash decay
+  if (!G.shootFlash) G.shootFlash = { alpha: 0, angle: 0 };
+  if (G.shootFlash.alpha > 0) G.shootFlash.alpha = Math.max(0, G.shootFlash.alpha - 0.15);
+  // Border flash (wave clear)
+  if (G.borderFlash > 0) G.borderFlash = Math.max(0, G.borderFlash - 0.015);
 
   // Wave banner timer
   if (G.bannerTimer >= 0) G.bannerTimer += dt;
@@ -2165,6 +2183,7 @@ function update(dt) {
         G.bossSpawned = true;
         G.bossWarningTimer = 0;
         AudioManager.playSfx('boss');
+        triggerShake(8);
       }
       G.spawnIdx++;
       G.spawnTimer = G.spawnIntvl;
@@ -2220,6 +2239,9 @@ function update(dt) {
             const da = Math.PI / 2 * dp + Math.PI / 4;
             G.deathParticles.push({ x: e.x, y: e.y, vx: Math.cos(da) * 40, vy: Math.sin(da) * 40, timer: 0 });
           }
+          // Colored particles by enemy type
+          var _pColors = { basic:'#ef4444', tank:'#ff6600', rusher:'#ff0055', sniper:'#aa00ff', boss:'#ffcc00' };
+          spawnDeathParticles(e.x, e.y, _pColors[e.type] || '#ef4444', e.type === 'boss' ? 16 : 8);
           // Life steal
           if (G.lifeSteal > 0) {
             G.tower.hp = Math.min(G.tower.maxHp, G.tower.hp + G.lifeSteal);
@@ -2258,6 +2280,8 @@ function update(dt) {
             addFx(e.x, e.y, e.r * 2.8, e.boss ? '#f97316' : '#ef4444');
           }
           G.enemies.splice(j, 1);
+        } else {
+          e.hitFlash = 2; // alive — white flash
         }
 
         // Pierce: bullet keeps going if pierceLeft > 0
@@ -2283,6 +2307,7 @@ function update(dt) {
       const dmgTaken = Math.max(1, Math.round(1 - G.armor * 0.05));
       G.tower.hp = Math.max(0, G.tower.hp - dmgTaken);
       G.flashAlpha = 1;
+      triggerShake(4);
       addFx(e.x, e.y, e.r * 2, '#f87171');
       G.enemies.splice(i, 1);
       if (G.tower.hp <= 0) { triggerGameOver(); return; }
@@ -2328,6 +2353,7 @@ function update(dt) {
     if (sbdx * sbdx + sbdy * sbdy < 18 * 18) {
       G.tower.hp = Math.max(0, G.tower.hp - sb.dmg);
       G.flashAlpha = 1;
+      triggerShake(3);
       G.sniperBullets.splice(sbi, 1);
       if (G.tower.hp <= 0) { triggerGameOver(); return; }
     } else if (sb.x < -50 || sb.x > CW + 50 || sb.y < -50 || sb.y > CH + 50) {
@@ -2442,14 +2468,84 @@ function fireTower() {
     });
   }
   AudioManager.playSfx('shoot');
+  if (!G.shootFlash) G.shootFlash = { alpha: 0, angle: 0 };
+  G.shootFlash.alpha = 1.0;
+  G.shootFlash.angle = baseAngle;
 }
 
 function addFx(x, y, maxR, color) {
   G.effects.push({ x, y, maxR, color, t: 0 });
 }
 
+/* ── 시각 피드백 시스템 ───────────────────────────────────── */
+var screenShake = { x: 0, y: 0, intensity: 0 };
+
+function triggerShake(intensity) {
+  if (intensity > screenShake.intensity) screenShake.intensity = intensity;
+}
+
+function updateShake() {
+  if (screenShake.intensity > 0.1) {
+    screenShake.x = (Math.random() - 0.5) * screenShake.intensity;
+    screenShake.y = (Math.random() - 0.5) * screenShake.intensity;
+    screenShake.intensity *= 0.8;
+  } else {
+    screenShake.x = 0;
+    screenShake.y = 0;
+    screenShake.intensity = 0;
+  }
+}
+
+function spawnDeathParticles(x, y, color, count) {
+  if (!G.particles) G.particles = [];
+  var n = count || 8;
+  for (var i = 0; i < n; i++) {
+    var angle = (Math.PI * 2 / n) * i;
+    var speed = 2 + Math.random() * 2;
+    G.particles.push({
+      x: x, y: y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 1.0,
+      decay: 0.045 + Math.random() * 0.02,
+      size: 3 + Math.random() * 2,
+      color: color,
+    });
+  }
+}
+
+function drawDangerBorder(ctx) {
+  if (!G || !G.tower) return;
+  if (G.tower.hp / G.tower.maxHp > 0.3) return;
+  var alpha = 0.3 + Math.sin(Date.now() * 0.005) * 0.2;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(239,68,68,' + alpha + ')';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(0, 0, CW, CH);
+  ctx.restore();
+}
+
+function drawShootFlash(ctx) {
+  if (!G.shootFlash || G.shootFlash.alpha <= 0) return;
+  var angle = G.shootFlash.angle;
+  var flashLen = 15;
+  ctx.save();
+  ctx.globalAlpha = G.shootFlash.alpha * 0.8;
+  ctx.strokeStyle = '#00ffff';
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = '#00ffff';
+  ctx.beginPath();
+  ctx.moveTo(G.cx, G.cy);
+  ctx.lineTo(G.cx + Math.cos(angle) * flashLen, G.cy + Math.sin(angle) * flashLen);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function onWaveComplete() {
   AudioManager.playSfx('wave_clear');
+  triggerShake(3);
+  G.borderFlash = 0.6;
   G.phase = 'between';
   G.betweenTimer = 2500;
   if (G.wave % 10 === 0) G.gems += 2;
@@ -2465,6 +2561,7 @@ function onWaveComplete() {
 function triggerGameOver() {
   loopGen++;           // stop game loop immediately
   G.phase = 'gameover';
+  triggerShake(12);
   AudioManager.playSfx('game_over');
 
   // Gems earned this run & boss check
@@ -2529,9 +2626,13 @@ function triggerGameOver() {
    RENDER
 ═══════════════════════════════════════════════════════════════ */
 function render() {
-  // ── 1. Background (full canvas, before zoom) ──────────────────
+  // ── 1. Background (full canvas, before shake) ─────────────────
   ctx.fillStyle = '#030b10';
   ctx.fillRect(0, 0, CW, CH);
+
+  // ── Screen shake wrapper ──────────────────────────────────────
+  ctx.save();
+  ctx.translate(screenShake.x, screenShake.y);
 
   // ── 2. Game world (zoom transform applied) ────────────────────
   ctx.save();
@@ -2696,6 +2797,18 @@ function render() {
       ctx.rotate(-Math.PI / 4);
     }
 
+    // Hit flash (white overlay for 2 frames)
+    if (e.hitFlash && e.hitFlash > 0) {
+      ctx.save();
+      ctx.globalAlpha = e.hitFlash / 2;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, e.r + 1, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      e.hitFlash--;
+    }
+
     // Health bar (color by type)
     var hbColors = { basic: '#ef4444', tank: '#ff6600', rusher: '#ff0055', sniper: '#aa00ff', boss: '#ffcc00' };
     var bw = e.r * 2.6, bh = (e.type === 'tank') ? 3 : 2;
@@ -2803,13 +2916,27 @@ function render() {
     const ftAlpha = 1 - ft.timer / 500;
     ctx.save();
     ctx.globalAlpha = Math.max(0, ftAlpha);
-    ctx.font = '10px "Courier New", monospace';
+    ctx.font = 'bold 11px "Courier New", monospace';
     ctx.fillStyle = '#f59e0b';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(ft.text, ft.x, ft.y - ft.timer * 0.04);
     ctx.restore();
   }
+
+  // Enhanced colored death particles
+  if (G.particles) {
+    for (const p of G.particles) {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+      ctx.restore();
+    }
+  }
+
+  // Shoot flash (laser muzzle)
+  drawShootFlash(ctx);
 
   ctx.restore(); // ← end zoom transform
 
@@ -2873,6 +3000,20 @@ function render() {
     ctx.fillText('! BOSS', CW / 2, CH * 0.25);
     ctx.restore();
   }
+
+  // ── Danger border (hp <= 30%) ─────────────────────────────────
+  drawDangerBorder(ctx);
+
+  // ── Wave clear border flash ────────────────────────────────────
+  if (G.borderFlash && G.borderFlash > 0) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0,255,255,' + G.borderFlash + ')';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(0, 0, CW, CH);
+    ctx.restore();
+  }
+
+  ctx.restore(); // ← end screen shake
 
   // ── 4. Tower stats popup ─────────────────────────────────────
   renderTowerPopup();
